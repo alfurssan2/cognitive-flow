@@ -305,7 +305,8 @@
             }
         });
 
-        window.addEventListener('DOMContentLoaded', init);
+        // Modules are deferred, so DOM is ready. Initialize directly.
+        init();
     </script>
 </body>
 </html>

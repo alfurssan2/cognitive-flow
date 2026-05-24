@@ -214,8 +214,8 @@
 <script type="module">
     import { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, getDoc, setDoc } from './firebase-config.js';
 
-    document.addEventListener("DOMContentLoaded", () => {
-        const sidebar = document.getElementById('sidebar');
+    // Module scripts are deferred automatically, so DOM is ready
+    const sidebar = document.getElementById('sidebar');
         const menuBtn = document.getElementById('mobile-menu-btn');
         const closeBtn = document.getElementById('close-menu-btn');
         menuBtn.addEventListener('click', () => { sidebar.classList.add('mobile-menu-open'); sidebar.classList.remove('hidden'); });
@@ -338,6 +338,5 @@
         
         // Initial render from local until firebase loads
         renderStats(JSON.parse(localStorage.getItem('exam_stats')) || {});
-    });
 </script>
 </body></html>
