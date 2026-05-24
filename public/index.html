@@ -333,7 +333,7 @@
             if (totalAttempted > 0) {
                 const overallPct = Math.round((totalCorrect / totalAttempted) * 100);
                 document.getElementById('success-rate-text').innerText = overallPct + '%';
-                document.getElementById('correct-fraction-text').innerText = \`\${totalCorrect}/\${totalAttempted} Correct\`;
+                document.getElementById('correct-fraction-text').innerText = `${totalCorrect}/${totalAttempted} Correct`;
                 
                 const circle = document.getElementById('success-circle');
                 const offset = 251.2 - (251.2 * overallPct) / 100;
