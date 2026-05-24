@@ -51,21 +51,21 @@
         </div>
 
         <!-- Central Flashcard Area -->
-        <div class="perspective-1000 w-full max-w-2xl mx-auto h-[650px] group" id="flashcard-container">
-            <div class="flip-card-inner relative w-full h-full preserve-3d" id="flashcard-inner">
+        <div class="perspective-1000 w-full max-w-2xl mx-auto group" id="flashcard-container">
+            <div class="flip-card-inner relative w-full h-full preserve-3d grid" id="flashcard-inner">
                 <!-- Front Side -->
-                <div id="card-front" class="absolute inset-0 backface-hidden glass-panel rounded-[24px] p-8 flex flex-col shadow-2xl active-glow">
+                <div id="card-front" class="col-start-1 row-start-1 backface-hidden glass-panel rounded-[24px] p-8 flex flex-col shadow-2xl active-glow transition-colors">
                     <div class="flex items-start justify-between mb-8">
                         <span class="bg-blue-900 text-blue-200 text-xs px-3 py-1 rounded-full font-bold">MULTIPLE CHOICE</span>
                     </div>
-                    <h2 id="question-text" class="text-xl md:text-2xl text-white leading-snug mb-6 flex-1 overflow-y-auto">Generating exam environment...</h2>
-                    <div id="options-container" class="grid grid-cols-1 gap-3 mt-auto">
+                    <h2 id="question-text" class="text-xl md:text-2xl text-white leading-snug mb-8">Generating exam environment...</h2>
+                    <div id="options-container" class="grid grid-cols-1 gap-3">
                         <!-- Options injected via JS -->
                     </div>
                 </div>
 
                 <!-- Back Side -->
-                <div id="card-back" class="absolute inset-0 backface-hidden rounded-[24px] p-8 flex flex-col shadow-2xl rotate-y-180" style="background-color: #1e293b;">
+                <div id="card-back" class="col-start-1 row-start-1 backface-hidden rounded-[24px] p-8 flex flex-col shadow-2xl rotate-y-180" style="background-color: #1e293b;">
                     <div class="flex items-center gap-2 mb-6" id="back-header">
                         <span id="back-icon" class="material-symbols-outlined text-green-400">check_circle</span>
                         <span id="back-status-text" class="text-sm uppercase font-bold text-green-400">Correct Answer</span>
