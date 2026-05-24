@@ -10,6 +10,6 @@ const firebaseConfig = {
 
 // Initialize Firebase using the global Compat object
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const provider = new firebase.auth.GoogleAuthProvider();
+window.auth = firebase.auth();
+window.db = firebase.firestore();
+window.provider = new firebase.auth.GoogleAuthProvider();
