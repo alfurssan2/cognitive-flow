@@ -235,8 +235,20 @@
                         <span class="material-symbols-outlined text-green-400">emoji_events</span>
                         <p class="text-sm text-green-100">Great job! You successfully recalled this concept.</p>
                     </div>`;
-                document.getElementById('chat-input').disabled = true;
-                document.getElementById('chat-send-btn').disabled = true;
+                
+                // Allow them to chat even if they got it right (e.g. if they guessed)
+                document.getElementById('chat-input').disabled = false;
+                document.getElementById('chat-send-btn').disabled = false;
+                
+                chatHistoryArray = [];
+                chatHistoryArray.push({ 
+                    role: 'user', 
+                    parts: [{ text: `I correctly answered "${selectedText}" to the question "${currentQuestion.question}". I might have a follow up question.` }] 
+                });
+                chatHistoryArray.push({ 
+                    role: 'model', 
+                    parts: [{ text: "Great job on getting that correct! Do you have any questions about this concept before we move on?" }] 
+                });
                 
                 container.classList.add('flipped');
             } else {
