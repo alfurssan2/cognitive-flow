@@ -106,12 +106,19 @@
         </a>
     </nav>
 
-    <script>
+    <script type="module">
+        import { auth, db, onAuthStateChanged, doc, setDoc } from './firebase-config.js';
+
         let sessionQueue = [];
         let totalCardsInSession = 0;
         let cardsCompleted = 0;
         let currentQuestion = null;
-        let stats = JSON.parse(localStorage.getItem('cognitiveStats')) || {};
+        let stats = JSON.parse(localStorage.getItem('exam_stats')) || {};
+        let currentUser = null;
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+        });
 
         const container = document.getElementById('flashcard-container');
         const questionText = document.getElementById('question-text');
@@ -196,8 +203,11 @@
                 totalCardsInSession += 1;
             }
 
-            localStorage.setItem('cognitiveStats', JSON.stringify(stats));
+            localStorage.setItem('exam_stats', JSON.stringify(stats));
             renderDashboard();
+            if (currentUser) {
+                setDoc(doc(db, "users", currentUser.uid), { exam_stats: stats }, { merge: true }).catch(e => console.error("Firebase sync error", e));
+            }
 
             correctAnswerDisplay.innerText = `${currentQuestion.correctAnswerLabel}: ${currentQuestion.correctAnswerText}`;
             referenceText.innerText = `Ref: ${currentQuestion.reference || 'N/A'}`;

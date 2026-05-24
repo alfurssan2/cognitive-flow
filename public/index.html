@@ -138,11 +138,18 @@
                 <h2 class="font-headline-lg text-headline-lg font-bold text-primary hidden md:block">CINP Mastery Dashboard</h2>
                 <h2 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary md:hidden">CINP Dashboard</h2>
             </div>
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-4">
                 <a href="study.html" class="hidden md:flex items-center gap-2 bg-primary text-on-primary font-label-lg text-label-lg rounded-full px-6 py-2.5 hover:bg-primary/90 transition-colors active:scale-95 duration-150">
                     <span class="material-symbols-outlined text-sm">play_arrow</span>
                     Start New Session
                 </a>
+                <button id="login-btn" class="flex items-center gap-2 border border-outline-variant text-on-surface-variant font-label-lg text-label-lg rounded-full px-4 py-2 hover:bg-surface-variant transition-colors">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-4 h-4" alt="Google">
+                    Sign In
+                </button>
+                <div id="user-profile" class="hidden items-center gap-3">
+                    <img id="user-avatar" src="" class="w-10 h-10 rounded-full border-2 border-primary object-cover cursor-pointer" alt="Profile" title="Click to sign out">
+                </div>
             </div>
         </div>
     </header>
@@ -204,95 +211,133 @@
     </main>
 </div>
 
-<script>
+<script type="module">
+    import { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, getDoc, setDoc } from './firebase-config.js';
+
     document.addEventListener("DOMContentLoaded", () => {
-        // --- Mobile Menu Logic ---
         const sidebar = document.getElementById('sidebar');
         const menuBtn = document.getElementById('mobile-menu-btn');
         const closeBtn = document.getElementById('close-menu-btn');
+        menuBtn.addEventListener('click', () => { sidebar.classList.add('mobile-menu-open'); sidebar.classList.remove('hidden'); });
+        closeBtn.addEventListener('click', () => { sidebar.classList.remove('mobile-menu-open'); sidebar.classList.add('hidden'); });
 
-        menuBtn.addEventListener('click', () => {
-            sidebar.classList.add('mobile-menu-open');
-            sidebar.classList.remove('hidden');
+        const loginBtn = document.getElementById('login-btn');
+        const userProfile = document.getElementById('user-profile');
+        const userAvatar = document.getElementById('user-avatar');
+
+        loginBtn.addEventListener('click', () => {
+            signInWithPopup(auth, provider).catch(err => console.error("Login failed", err));
         });
 
-        closeBtn.addEventListener('click', () => {
-            sidebar.classList.remove('mobile-menu-open');
-            sidebar.classList.add('hidden');
+        userAvatar.addEventListener('click', () => {
+            if(confirm("Sign out of Google?")) {
+                signOut(auth);
+            }
         });
 
-        // --- Data Binding Logic ---
-        const stats = JSON.parse(localStorage.getItem('exam_stats')) || {};
-        
-        let totalCorrect = 0;
-        let totalAttempted = 0;
+        let currentUser = null;
 
-        const container = document.getElementById('pillar-progress-container');
-        
-        // Colors to cycle through for pillars
-        const colors = [
-            { text: 'text-primary', bg: 'bg-primary', lightBg: 'bg-primary/20' },
-            { text: 'text-secondary', bg: 'bg-secondary', lightBg: 'bg-secondary/20' },
-            { text: 'text-tertiary', bg: 'bg-tertiary', lightBg: 'bg-tertiary/20' },
-            { text: 'text-error', bg: 'bg-error', lightBg: 'bg-error/20' }
-        ];
-
-        let index = 0;
-
-        for (const [pillar, data] of Object.entries(stats)) {
-            if (data.total > 0) {
-                totalCorrect += data.correct;
-                totalAttempted += data.total;
-
-                const pct = Math.round((data.correct / data.total) * 100);
-                const theme = colors[index % colors.length];
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                loginBtn.classList.add('hidden');
+                userProfile.classList.remove('hidden');
+                userProfile.classList.add('flex');
+                userAvatar.src = user.photoURL || 'https://via.placeholder.com/40';
                 
-                const card = document.createElement('div');
-                card.className = "bg-surface-container-low rounded-xl p-5 border border-white/5 flex flex-col gap-4";
-                card.innerHTML = `
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 shrink-0 rounded ${theme.lightBg} flex items-center justify-center">
-                            <span class="material-symbols-outlined ${theme.text} text-sm">analytics</span>
+                // Fetch stats from Firestore
+                const docRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(docRef);
+                let cloudStats = {};
+                if (docSnap.exists()) {
+                    cloudStats = docSnap.data().exam_stats || {};
+                }
+                
+                // Merge with local if any (simple merge for now, prioritizing cloud)
+                const localStats = JSON.parse(localStorage.getItem('exam_stats')) || {};
+                let merged = { ...localStats, ...cloudStats };
+                localStorage.setItem('exam_stats', JSON.stringify(merged));
+                
+                // Save merged back to cloud to ensure sync
+                await setDoc(docRef, { exam_stats: merged }, { merge: true });
+                renderStats(merged);
+            } else {
+                currentUser = null;
+                loginBtn.classList.remove('hidden');
+                userProfile.classList.add('hidden');
+                userProfile.classList.remove('flex');
+                const localStats = JSON.parse(localStorage.getItem('exam_stats')) || {};
+                renderStats(localStats);
+            }
+        });
+
+        function renderStats(stats) {
+            let totalCorrect = 0;
+            let totalAttempted = 0;
+            const container = document.getElementById('pillar-progress-container');
+            container.innerHTML = '';
+            
+            const colors = [
+                { text: 'text-primary', bg: 'bg-primary', lightBg: 'bg-primary/20' },
+                { text: 'text-secondary', bg: 'bg-secondary', lightBg: 'bg-secondary/20' },
+                { text: 'text-tertiary', bg: 'bg-tertiary', lightBg: 'bg-tertiary/20' },
+                { text: 'text-error', bg: 'bg-error', lightBg: 'bg-error/20' }
+            ];
+
+            let index = 0;
+            for (const [pillar, data] of Object.entries(stats)) {
+                if (data.total > 0) {
+                    totalCorrect += data.correct;
+                    totalAttempted += data.total;
+
+                    const pct = Math.round((data.correct / data.total) * 100);
+                    const theme = colors[index % colors.length];
+                    
+                    const card = document.createElement('div');
+                    card.className = "bg-surface-container-low rounded-xl p-5 border border-white/5 flex flex-col gap-4";
+                    card.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 shrink-0 rounded ${theme.lightBg} flex items-center justify-center">
+                                <span class="material-symbols-outlined ${theme.text} text-sm">analytics</span>
+                            </div>
+                            <h4 class="font-title-md text-title-md text-on-surface leading-tight flex-1 line-clamp-2" title="${pillar}">${pillar}</h4>
                         </div>
-                        <h4 class="font-title-md text-title-md text-on-surface leading-tight flex-1 line-clamp-2" title="${pillar}">${pillar}</h4>
-                    </div>
-                    <div>
-                        <div class="flex justify-between mb-2">
-                            <span class="font-body-md text-body-md text-on-surface-variant">${data.correct}/${data.total}</span>
-                            <span class="font-label-lg text-label-lg ${theme.text}">${pct}%</span>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-body-md text-body-md text-on-surface-variant">${data.correct}/${data.total}</span>
+                                <span class="font-label-lg text-label-lg ${theme.text}">${pct}%</span>
+                            </div>
+                            <div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+                                <div class="${theme.bg} h-full rounded-full transition-all duration-1000" style="width: ${pct}%;"></div>
+                            </div>
                         </div>
-                        <div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
-                            <div class="${theme.bg} h-full rounded-full transition-all duration-1000" style="width: ${pct}%;"></div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-                index++;
+                    `;
+                    container.appendChild(card);
+                    index++;
+                }
+            }
+
+            if (index === 0) {
+                container.innerHTML = `<p class="text-gray-400 col-span-full">No questions answered yet. Start a session to build your stats!</p>`;
+            }
+
+            document.getElementById('total-questions-text').innerText = totalAttempted;
+            
+            if (totalAttempted > 0) {
+                const overallPct = Math.round((totalCorrect / totalAttempted) * 100);
+                document.getElementById('success-rate-text').innerText = overallPct + '%';
+                document.getElementById('correct-fraction-text').innerText = \`\${totalCorrect}/\${totalAttempted} Correct\`;
+                
+                const circle = document.getElementById('success-circle');
+                const offset = 251.2 - (251.2 * overallPct) / 100;
+                setTimeout(() => { circle.style.strokeDashoffset = offset; }, 100);
+            } else {
+                 document.getElementById('success-circle').style.strokeDashoffset = 251.2;
             }
         }
-
-        if (index === 0) {
-            container.innerHTML = `<p class="text-gray-400 col-span-full">No questions answered yet. Start a session to build your stats!</p>`;
-        }
-
-        // Update overall stats
-        document.getElementById('total-questions-text').innerText = totalAttempted;
         
-        if (totalAttempted > 0) {
-            const overallPct = Math.round((totalCorrect / totalAttempted) * 100);
-            document.getElementById('success-rate-text').innerText = overallPct + '%';
-            document.getElementById('correct-fraction-text').innerText = \`\${totalCorrect}/\${totalAttempted} Correct\`;
-            
-            // Update SVG Circle (Circumference is 251.2)
-            const circle = document.getElementById('success-circle');
-            const offset = 251.2 - (251.2 * overallPct) / 100;
-            // timeout to allow animation
-            setTimeout(() => {
-                circle.style.strokeDashoffset = offset;
-            }, 100);
-        } else {
-             document.getElementById('success-circle').style.strokeDashoffset = 251.2;
-        }
+        // Initial render from local until firebase loads
+        renderStats(JSON.parse(localStorage.getItem('exam_stats')) || {});
     });
 </script>
 </body></html>
