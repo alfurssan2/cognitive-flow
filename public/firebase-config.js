@@ -1,6 +1,6 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { initializeApp } from "https://esm.sh/firebase@10.9.0/app";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://esm.sh/firebase@10.9.0/auth";
+import { getFirestore, doc, getDoc, setDoc } from "https://esm.sh/firebase@10.9.0/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAbDQxojFodq6wIGZYLmZFxCFcUFP9H1oY",
