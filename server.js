@@ -78,10 +78,21 @@ app.post('/api/generate-cards', async (req, res) => {
         const spreadsheetId = process.env.SPREADSHEET_ID;
         // Generate via Gemini
         const newCards = await generateCards(topic, numQuestions);
-        // Append to 'Generator' tab via Sheets API
-        await appendGeneratedCards(sheetsAPI, spreadsheetId, newCards);
         
-        res.json({ success: true, added: newCards.length });
+        // Attempt to append to 'Generator' tab via Sheets API
+        try {
+            await appendGeneratedCards(sheetsAPI, spreadsheetId, newCards);
+            res.json({ success: true, added: newCards.length, cards: newCards, savedToSheets: true });
+        } catch (sheetError) {
+            console.warn("Could not save to Sheets (API Key lacks write access):", sheetError.message);
+            res.json({ 
+                success: true, 
+                added: newCards.length, 
+                cards: newCards, 
+                savedToSheets: false, 
+                sheetError: sheetError.message 
+            });
+        }
     } catch (error) {
         console.error("Generate Error:", error);
         res.status(500).json({ error: error.message || "Failed to generate cards" });

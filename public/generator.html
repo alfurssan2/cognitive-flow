@@ -77,6 +77,15 @@
                 </button>
 
                 <div id="status-message" class="text-center text-sm font-medium mt-2 hidden"></div>
+
+                <div id="results-container" class="mt-6 flex flex-col gap-4 hidden">
+                    <h3 class="text-lg font-bold text-white mb-2">Generated Flashcards</h3>
+                    <p class="text-sm text-yellow-400 bg-yellow-400/10 p-3 rounded-lg mb-2">
+                        <span class="font-bold uppercase tracking-wider text-xs block mb-1">Action Required</span>
+                        Your Google API Key is read-only, so we couldn't automatically save these to your sheet. You can manually copy and paste them into your 'Generator' tab!
+                    </p>
+                    <div id="cards-list" class="flex flex-col gap-3"></div>
+                </div>
             </div>
         </div>
     </main>
@@ -118,9 +127,29 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    statusMsg.classList.replace('text-primary', 'text-green-400');
-                    statusMsg.innerText = `Successfully generated and saved ${data.added} questions to the Generator tab!`;
-                    topicInput.value = '';
+                    if (data.savedToSheets) {
+                        statusMsg.classList.replace('text-primary', 'text-green-400');
+                        statusMsg.innerText = `Successfully generated and saved ${data.added} questions to the Generator tab!`;
+                        topicInput.value = '';
+                    } else {
+                        statusMsg.classList.replace('text-primary', 'text-yellow-400');
+                        statusMsg.innerText = `Generated ${data.added} questions! (Manual copy required)`;
+                        document.getElementById('results-container').classList.remove('hidden');
+                        
+                        const list = document.getElementById('cards-list');
+                        list.innerHTML = data.cards.map((c, i) => `
+                            <div class="bg-black/30 p-4 rounded-xl border border-white/10 text-sm flex flex-col gap-2">
+                                <p class="font-bold text-white">${i+1}. ${c.question}</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-300 mt-2">
+                                    <div class="${c.correct === 'A' ? 'text-green-400 font-bold' : ''}">A: ${c.optA}</div>
+                                    <div class="${c.correct === 'B' ? 'text-green-400 font-bold' : ''}">B: ${c.optB}</div>
+                                    <div class="${c.correct === 'C' ? 'text-green-400 font-bold' : ''}">C: ${c.optC}</div>
+                                    <div class="${c.correct === 'D' ? 'text-green-400 font-bold' : ''}">D: ${c.optD}</div>
+                                </div>
+                                <p class="text-blue-300 italic text-xs mt-2 border-t border-white/5 pt-2">Ref: ${c.reference}</p>
+                            </div>
+                        `).join('');
+                    }
                 } else {
                     throw new Error(data.error || "Failed to generate");
                 }
