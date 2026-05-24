@@ -106,9 +106,11 @@
         </a>
     </nav>
 
-    <script type="module">
-        import { auth, db, onAuthStateChanged, doc, setDoc } from './firebase-config.js';
-
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script>
         let sessionQueue = [];
         let totalCardsInSession = 0;
         let cardsCompleted = 0;
@@ -116,7 +118,7 @@
         let stats = JSON.parse(localStorage.getItem('exam_stats')) || {};
         let currentUser = null;
 
-        onAuthStateChanged(auth, (user) => {
+        auth.onAuthStateChanged((user) => {
             currentUser = user;
         });
 
@@ -206,7 +208,7 @@
             localStorage.setItem('exam_stats', JSON.stringify(stats));
             renderDashboard();
             if (currentUser) {
-                setDoc(doc(db, "users", currentUser.uid), { exam_stats: stats }, { merge: true }).catch(e => console.error("Firebase sync error", e));
+                db.collection("users").doc(currentUser.uid).set({ exam_stats: stats }, { merge: true }).catch(e => console.error("Firebase sync error", e));
             }
 
             correctAnswerDisplay.innerText = `${currentQuestion.correctAnswerLabel}: ${currentQuestion.correctAnswerText}`;
@@ -305,8 +307,7 @@
             }
         });
 
-        // Modules are deferred, so DOM is ready. Initialize directly.
-        init();
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>

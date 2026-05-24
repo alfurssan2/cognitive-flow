@@ -1,7 +1,3 @@
-import { initializeApp } from "https://esm.sh/firebase@10.9.0/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://esm.sh/firebase@10.9.0/auth";
-import { getFirestore, doc, getDoc, setDoc } from "https://esm.sh/firebase@10.9.0/firestore";
-
 const firebaseConfig = {
   apiKey: "AIzaSyAbDQxojFodq6wIGZYLmZFxCFcUFP9H1oY",
   authDomain: "cognitive-flow-ffa86.firebaseapp.com",
@@ -12,9 +8,8 @@ const firebaseConfig = {
   measurementId: "G-0NSZ2NFGEX"
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const provider = new GoogleAuthProvider();
-
-export { signInWithPopup, signOut, onAuthStateChanged, doc, getDoc, setDoc };
+// Initialize Firebase using the global Compat object
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const provider = new firebase.auth.GoogleAuthProvider();

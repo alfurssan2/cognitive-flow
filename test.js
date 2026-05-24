@@ -1,25 +1,17 @@
-const { google } = require('googleapis');
-require('dotenv').config();
+const puppeteer = require('puppeteer');
 
-const sheetsAPI = google.sheets({ version: 'v4', auth: process.env.GOOGLE_API_KEY });
+(async () => {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+    page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
+    page.on('requestfailed', request => console.log('REQUEST FAILED:', request.url(), request.failure().errorText));
 
-async function check() {
-    const res = await sheetsAPI.spreadsheets.get({ spreadsheetId: process.env.SPREADSHEET_ID });
-    const tabs = res.data.sheets.map(s => s.properties.title);
-    console.log('Tabs:', tabs);
-
-    for (const tab of tabs) {
-        if (tab !== 'Settings') {
-            try {
-                const d = await sheetsAPI.spreadsheets.values.get({ 
-                    spreadsheetId: process.env.SPREADSHEET_ID, 
-                    range: `'${tab}'!A1:G5` 
-                });
-                console.log('Tab:', tab, 'Rows:', d.data.values);
-            } catch(e) {
-                console.log('Error reading tab:', tab, e.message);
-            }
-        }
-    }
-}
-check().catch(console.error);
+    await page.goto('http://localhost:3000');
+    
+    // wait for a bit
+    await new Promise(r => setTimeout(r, 2000));
+    
+    await browser.close();
+})();

@@ -211,11 +211,14 @@
     </main>
 </div>
 
-<script type="module">
-    import { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, getDoc, setDoc } from './firebase-config.js';
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+<script src="./firebase-config.js"></script>
 
-    // Module scripts are deferred automatically, so DOM is ready
-    const sidebar = document.getElementById('sidebar');
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const sidebar = document.getElementById('sidebar');
         const menuBtn = document.getElementById('mobile-menu-btn');
         const closeBtn = document.getElementById('close-menu-btn');
         menuBtn.addEventListener('click', () => { sidebar.classList.add('mobile-menu-open'); sidebar.classList.remove('hidden'); });
@@ -227,7 +230,7 @@
 
         loginBtn.addEventListener('click', () => {
             alert("Button clicked! Attempting to connect to Google...");
-            signInWithPopup(auth, provider).catch(err => {
+            auth.signInWithPopup(provider).catch(err => {
                 console.error("Login failed", err);
                 alert("Login Error: " + err.message);
             });
@@ -235,13 +238,13 @@
 
         userAvatar.addEventListener('click', () => {
             if(confirm("Sign out of Google?")) {
-                signOut(auth);
+                auth.signOut();
             }
         });
 
         let currentUser = null;
 
-        onAuthStateChanged(auth, async (user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
                 loginBtn.classList.add('hidden');
@@ -250,10 +253,10 @@
                 userAvatar.src = user.photoURL || 'https://via.placeholder.com/40';
                 
                 // Fetch stats from Firestore
-                const docRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(docRef);
+                const docRef = db.collection("users").doc(user.uid);
+                const docSnap = await docRef.get();
                 let cloudStats = {};
-                if (docSnap.exists()) {
+                if (docSnap.exists) {
                     cloudStats = docSnap.data().exam_stats || {};
                 }
                 
@@ -263,7 +266,7 @@
                 localStorage.setItem('exam_stats', JSON.stringify(merged));
                 
                 // Save merged back to cloud to ensure sync
-                await setDoc(docRef, { exam_stats: merged }, { merge: true });
+                await docRef.set({ exam_stats: merged }, { merge: true });
                 renderStats(merged);
             } else {
                 currentUser = null;
@@ -342,5 +345,6 @@
         
         // Initial render from local until firebase loads
         renderStats(JSON.parse(localStorage.getItem('exam_stats')) || {});
+    });
 </script>
 </body></html>
