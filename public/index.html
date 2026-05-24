@@ -263,14 +263,17 @@
                 const col = document.createElement('div');
                 col.className = "flex flex-col gap-3";
                 col.innerHTML = `
-                    <div class="flex justify-between items-end">
-                        <span class="font-title-lg text-title-lg flex items-center gap-2 text-gray-200">
-                            <span class="material-symbols-outlined ${theme.text}">analytics</span>
-                            ${pillar}
+                    <div class="flex justify-between items-start gap-4">
+                        <span class="text-md md:text-lg flex gap-2 text-gray-200 overflow-hidden">
+                            <span class="material-symbols-outlined ${theme.text} shrink-0">analytics</span>
+                            <span class="line-clamp-2" title="${pillar}">${pillar}</span>
                         </span>
-                        <span class="${theme.text} font-bold">${percentage}%</span>
+                        <div class="text-right shrink-0">
+                            <span class="${theme.text} font-bold text-xl block">${percentage}%</span>
+                            <span class="text-xs text-gray-400">${data.correct}/${data.total} correct</span>
+                        </div>
                     </div>
-                    <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div class="h-2 bg-gray-700 rounded-full overflow-hidden mt-1">
                         <div class="h-full ${theme.bg} ${theme.shadow} transition-all duration-500" style="width: ${percentage}%"></div>
                     </div>
                 `;
