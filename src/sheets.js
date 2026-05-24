@@ -17,8 +17,13 @@ async function fetchSessionData(sheetsAPI, spreadsheetId) {
         throw new Error("No data found in Settings tab.");
     }
 
-    // Skip header row if exists, assuming row 1 is header
-    const pillars = settingsRows.slice(1).map(row => ({
+    let pillarsData = settingsRows;
+    // Skip header row only if the second column is not a number
+    if (pillarsData[0] && isNaN(parseInt(pillarsData[0][1], 10))) {
+        pillarsData = pillarsData.slice(1);
+    }
+
+    const pillars = pillarsData.map(row => ({
         tabName: row[0],
         targetCount: parseInt(row[1], 10)
     }));
