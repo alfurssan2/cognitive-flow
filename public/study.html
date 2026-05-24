@@ -73,12 +73,15 @@
                     
                     <h2 id="correct-answer-display" class="text-xl font-bold mb-4 text-white overflow-y-auto max-h-32"></h2>
                     
-                    <div class="flex-1 flex flex-col justify-center">
-                        <div class="bg-black/30 p-6 rounded-2xl backdrop-blur-sm flex gap-4 items-center">
-                            <span id="hint-icon" class="material-symbols-outlined shrink-0 text-blue-300">insights</span>
-                            <div>
-                                <p id="hint-text" class="text-md md:text-lg italic opacity-90 text-blue-100">Fetching AI Hint...</p>
-                            </div>
+                    <div class="flex-1 flex flex-col overflow-hidden my-4 relative bg-black/20 rounded-2xl border border-white/5">
+                        <div id="chat-history" class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+                            <!-- Messages -->
+                        </div>
+                        <div class="p-2 bg-black/40 border-t border-white/5 flex gap-2 items-center" onclick="event.stopPropagation()">
+                            <input type="text" id="chat-input" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="Ask follow-up question..." autocomplete="off">
+                            <button id="chat-send-btn" class="bg-blue-600 p-2 rounded-lg hover:bg-blue-500 flex items-center justify-center transition-colors">
+                                <span class="material-symbols-outlined text-sm">send</span>
+                            </button>
                         </div>
                     </div>
                     
@@ -137,9 +140,15 @@
         const progressBarFill = document.getElementById('progress-bar-fill');
         const dashboardContainer = document.getElementById('dashboard-container');
 
+        let chatHistoryArray = [];
+
         async function init() {
             try {
-                const res = await fetch('/api/session');
+                const params = new URLSearchParams(window.location.search);
+                const pillar = params.get('pillar');
+                const url = pillar ? `/api/session?pillar=${encodeURIComponent(pillar)}` : '/api/session';
+                
+                const res = await fetch(url);
                 const data = await res.json();
                 if (data.session && data.session.length > 0) {
                     sessionQueue = data.session;
@@ -220,8 +229,14 @@
                 backIcon.className = 'material-symbols-outlined text-green-400';
                 backStatusText.innerText = 'Correct Answer';
                 backStatusText.className = 'text-sm uppercase font-bold text-green-400';
-                hintText.innerText = "Great job! You successfully recalled this concept.";
-                hintIcon.innerText = 'emoji_events';
+                
+                document.getElementById('chat-history').innerHTML = `
+                    <div class="flex gap-3">
+                        <span class="material-symbols-outlined text-green-400">emoji_events</span>
+                        <p class="text-sm text-green-100">Great job! You successfully recalled this concept.</p>
+                    </div>`;
+                document.getElementById('chat-input').disabled = true;
+                document.getElementById('chat-send-btn').disabled = true;
                 
                 container.classList.add('flipped');
             } else {
@@ -230,8 +245,15 @@
                 backIcon.className = 'material-symbols-outlined text-red-400';
                 backStatusText.innerText = 'Incorrect Answer';
                 backStatusText.className = 'text-sm uppercase font-bold text-red-400';
-                hintText.innerText = "Analyzing conceptual gap with AI...";
-                hintIcon.innerText = 'psychology';
+                
+                document.getElementById('chat-input').disabled = false;
+                document.getElementById('chat-send-btn').disabled = false;
+                chatHistoryArray = []; // Reset history for new question
+                document.getElementById('chat-history').innerHTML = `
+                    <div class="flex gap-3">
+                        <span class="material-symbols-outlined text-blue-300 animate-spin">sync</span>
+                        <p class="text-sm text-blue-100 italic">Analyzing conceptual gap with AI...</p>
+                    </div>`;
 
                 container.classList.add('flipped');
 
@@ -246,13 +268,81 @@
                         })
                     });
                     const hintData = await res.json();
-                    hintText.innerText = hintData.conceptual_hint;
-                    if(hintData.snapshot_icon) hintIcon.innerText = hintData.snapshot_icon;
+                    
+                    // Seed chat history for follow-ups
+                    chatHistoryArray.push({ 
+                        role: 'user', 
+                        parts: [{ text: `I answered "${selectedText}" to the question "${currentQuestion.question}". The correct answer is "${currentQuestion.correctAnswerText}". Explain why.` }] 
+                    });
+                    chatHistoryArray.push({ 
+                        role: 'model', 
+                        parts: [{ text: hintData.conceptual_hint }] 
+                    });
+                    
+                    document.getElementById('chat-history').innerHTML = `
+                        <div class="flex gap-3">
+                            <span class="material-symbols-outlined text-blue-300">${hintData.snapshot_icon || 'psychology'}</span>
+                            <p class="text-sm text-blue-100 leading-relaxed">${hintData.conceptual_hint}</p>
+                        </div>`;
                 } catch (e) {
-                    hintText.innerText = "Failed to load conceptual hint.";
+                    document.getElementById('chat-history').innerHTML = `<p class="text-sm text-red-400">Failed to load conceptual hint.</p>`;
                 }
             }
         }
+
+        document.getElementById('chat-send-btn').onclick = async (e) => {
+            if (e) e.stopPropagation();
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            input.value = '';
+            const historyDiv = document.getElementById('chat-history');
+            
+            historyDiv.innerHTML += `
+                <div class="flex gap-3 justify-end mt-2">
+                    <p class="text-sm bg-blue-900/50 text-blue-100 px-3 py-2 rounded-xl rounded-tr-sm">${message}</p>
+                </div>`;
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+            
+            const loadingId = 'loading-' + Date.now();
+            historyDiv.innerHTML += `
+                <div id="${loadingId}" class="flex gap-3 mt-2">
+                    <span class="material-symbols-outlined text-purple-300 animate-spin">sync</span>
+                </div>`;
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ history: chatHistoryArray, message })
+                });
+                const data = await res.json();
+                
+                document.getElementById(loadingId).remove();
+                
+                historyDiv.innerHTML += `
+                    <div class="flex gap-3 mt-2">
+                        <span class="material-symbols-outlined text-purple-300">smart_toy</span>
+                        <p class="text-sm text-purple-100 leading-relaxed">${data.reply}</p>
+                    </div>`;
+                
+                chatHistoryArray.push({ role: 'user', parts: [{ text: message }] });
+                chatHistoryArray.push({ role: 'model', parts: [{ text: data.reply }] });
+                historyDiv.scrollTop = historyDiv.scrollHeight;
+            } catch (err) {
+                 document.getElementById(loadingId).remove();
+                 historyDiv.innerHTML += `<p class="text-red-400 text-xs">Failed to connect to AI.</p>`;
+            }
+        };
+
+        document.getElementById('chat-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('chat-send-btn').click();
+        });
+
+        // Prevent flip when clicking chat
+        document.getElementById('chat-history').onclick = (e) => e.stopPropagation();
 
         document.getElementById('next-btn').onclick = (e) => {
             if (e) e.stopPropagation();

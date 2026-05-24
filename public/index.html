@@ -139,6 +139,10 @@
                 <h2 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary md:hidden">CINP Dashboard</h2>
             </div>
             <div class="flex items-center gap-4">
+                <a href="generator.html" class="hidden md:flex items-center gap-2 text-primary hover:text-white transition-colors bg-surface-container-low px-4 py-2 rounded-full border border-white/5">
+                    <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                    <span class="text-sm font-bold">AI Generator</span>
+                </a>
                 <a href="study.html" class="hidden md:flex items-center gap-2 bg-primary text-on-primary font-label-lg text-label-lg rounded-full px-6 py-2.5 hover:bg-primary/90 transition-colors active:scale-95 duration-150">
                     <span class="material-symbols-outlined text-sm">play_arrow</span>
                     Start New Session
@@ -195,10 +199,35 @@
 
         <!-- Pillar Progress (Middle Row) -->
         <div>
-            <h2 class="font-title-lg text-title-lg text-on-surface mb-6">Pillar Progress</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="pillar-progress-container">
+            <h2 class="font-title-lg text-title-lg text-on-surface">Pillar Progress</h2>
+            
+            <!-- Weakness Coach -->
+            <section class="mt-8">
+                <div id="weakness-coach-container" class="hidden w-full bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-500/30 rounded-3xl p-6 md:p-8 relative overflow-hidden">
+                    <div class="absolute -right-8 -top-8 text-purple-500/20">
+                        <span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1;">psychology</span>
+                    </div>
+                    <div class="relative z-10 flex flex-col md:flex-row gap-6 items-center justify-between">
+                        <div>
+                            <div class="flex items-center gap-2 text-purple-400 mb-2">
+                                <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">model_training</span>
+                                <span class="font-bold text-sm tracking-widest uppercase">AI Weakness Coach</span>
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-bold text-white mb-2">Targeted Focus Session</h3>
+                            <p class="text-on-surface-variant max-w-lg" id="weakness-text">Analyzing your progress...</p>
+                        </div>
+                        <a id="weakness-btn" href="#" class="shrink-0 flex items-center gap-2 bg-purple-500 text-white font-bold rounded-xl px-6 py-3 hover:bg-purple-400 transition-colors active:scale-95">
+                            <span class="material-symbols-outlined">rocket_launch</span>
+                            Start Focus Session
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pillar Progress Grid -->
+            <section class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="pillar-progress-container">
                 <!-- Dynamically injected -->
-            </div>
+            </section>
         </div>
         
         <!-- Mobile Start Button -->
@@ -338,6 +367,32 @@
                 setTimeout(() => { circle.style.strokeDashoffset = offset; }, 100);
             } else {
                  document.getElementById('success-circle').style.strokeDashoffset = 251.2;
+            }
+
+            // Weakness Coach Logic
+            const coachContainer = document.getElementById('weakness-coach-container');
+            const weaknessText = document.getElementById('weakness-text');
+            const weaknessBtn = document.getElementById('weakness-btn');
+            
+            let weakestPillar = null;
+            let lowestScore = 100;
+
+            for (const [pillar, data] of Object.entries(stats)) {
+                if (data.total >= 3) { // Only judge if they answered at least 3 questions
+                    const pct = (data.correct / data.total) * 100;
+                    if (pct < lowestScore) {
+                        lowestScore = pct;
+                        weakestPillar = pillar;
+                    }
+                }
+            }
+
+            if (weakestPillar && lowestScore < 70) {
+                coachContainer.classList.remove('hidden');
+                weaknessText.innerText = `I noticed you are scoring ${Math.round(lowestScore)}% on "${weakestPillar}". Let's do a targeted session to bring that score up!`;
+                weaknessBtn.href = `study.html?pillar=${encodeURIComponent(weakestPillar)}`;
+            } else {
+                coachContainer.classList.add('hidden');
             }
         }
         

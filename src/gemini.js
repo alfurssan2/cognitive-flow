@@ -47,4 +47,56 @@ Return ONLY valid JSON.`;
     }
 }
 
-module.exports = { getCognitiveHint };
+/**
+ * Handles conversational follow-ups for incorrect answers.
+ */
+async function chatWithTutor(history, message) {
+    if (!process.env.GEMINI_API_KEY) return "I'm sorry, my AI backend is currently offline.";
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const chat = model.startChat({
+        history: history || [],
+    });
+
+    try {
+        const result = await chat.sendMessage(message);
+        return result.response.text();
+    } catch (error) {
+        console.error("Error in chatWithTutor:", error);
+        return "I'm having trouble processing that right now. Please try again.";
+    }
+}
+
+/**
+ * Generates an array of flashcards in JSON format.
+ */
+async function generateCards(topic, numQuestions) {
+    if (!process.env.GEMINI_API_KEY) throw new Error("Gemini API Key missing.");
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const prompt = `You are a professional certification exam writer. 
+Generate exactly ${numQuestions} multiple-choice questions about the topic: "${topic}".
+Output MUST be a valid JSON array of objects.
+Each object must have exactly these keys:
+- "question": the question text
+- "optA": option A
+- "optB": option B
+- "optC": option C
+- "optD": option D
+- "correct": the correct option letter (A, B, C, or D)
+- "reference": a brief reference or explanation
+
+Return ONLY valid JSON.`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/);
+    const jsonString = jsonMatch ? jsonMatch[1] : text;
+    
+    return JSON.parse(jsonString.trim());
+}
+
+module.exports = { getCognitiveHint, chatWithTutor, generateCards };

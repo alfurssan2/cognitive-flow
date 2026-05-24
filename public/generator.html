@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>AI Generator - Cognitive Flow</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#adc6ff",
+                        "on-primary": "#102f60",
+                        "primary-container": "#2b4678",
+                        "on-primary-container": "#d8e2ff",
+                        background: "#111318",
+                        "on-background": "#e2e2e9",
+                        surface: "#111318",
+                        "on-surface": "#e2e2e9",
+                        "surface-variant": "#44474f",
+                        "on-surface-variant": "#c4c6d0",
+                        "surface-container-low": "#1c1b1f"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-sans selection:bg-primary/30">
+    <header class="sticky top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-white/10 h-16 flex items-center justify-between px-4 md:px-8">
+        <div class="flex items-center gap-4">
+            <a href="index.html" class="flex items-center gap-2 text-primary hover:text-white transition-colors">
+                <span class="material-symbols-outlined text-sm">arrow_back</span>
+                <span class="text-sm font-bold uppercase tracking-wider hidden md:inline">Dashboard</span>
+            </a>
+            <div class="h-6 w-px bg-white/10 hidden md:block"></div>
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                <h1 class="text-lg font-bold text-on-surface">AI Content Generator</h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-2xl mx-auto p-6 md:p-12 flex flex-col items-center justify-center">
+        <div class="w-full bg-surface-container-low rounded-3xl p-8 border border-white/5 shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10 flex flex-col gap-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Generate Flashcards</h2>
+                    <p class="text-on-surface-variant text-sm">Create new multiple-choice questions using Gemini AI. They will be automatically appended to the "Generator" tab in your Google Sheet.</p>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-gray-300">Topic</label>
+                    <input type="text" id="topic-input" class="bg-background border border-surface-variant rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Agile Methodology, Strategy Execution...">
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-gray-300">Number of Questions</label>
+                    <select id="num-input" class="bg-background border border-surface-variant rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none">
+                        <option value="1">1 Question</option>
+                        <option value="3" selected>3 Questions</option>
+                        <option value="5">5 Questions</option>
+                        <option value="10">10 Questions</option>
+                    </select>
+                </div>
+
+                <button id="generate-btn" class="mt-4 bg-primary text-on-primary font-bold rounded-xl py-4 flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98]">
+                    <span class="material-symbols-outlined" id="btn-icon">magic_button</span>
+                    <span id="btn-text">Generate & Save to Sheets</span>
+                </button>
+
+                <div id="status-message" class="text-center text-sm font-medium mt-2 hidden"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const btn = document.getElementById('generate-btn');
+        const topicInput = document.getElementById('topic-input');
+        const numInput = document.getElementById('num-input');
+        const btnText = document.getElementById('btn-text');
+        const btnIcon = document.getElementById('btn-icon');
+        const statusMsg = document.getElementById('status-message');
+
+        btn.addEventListener('click', async () => {
+            const topic = topicInput.value.trim();
+            const numQuestions = parseInt(numInput.value);
+
+            if (!topic) {
+                alert("Please enter a topic.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            btnText.innerText = "Generating with AI...";
+            btnIcon.innerText = "hourglass_empty";
+            btnIcon.classList.add('animate-spin');
+            
+            statusMsg.classList.remove('hidden', 'text-error', 'text-green-400');
+            statusMsg.classList.add('text-primary');
+            statusMsg.innerText = "Writing questions and connecting to Google Sheets...";
+
+            try {
+                const res = await fetch('/api/generate-cards', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, numQuestions })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    statusMsg.classList.replace('text-primary', 'text-green-400');
+                    statusMsg.innerText = `Successfully generated and saved ${data.added} questions to the Generator tab!`;
+                    topicInput.value = '';
+                } else {
+                    throw new Error(data.error || "Failed to generate");
+                }
+            } catch (err) {
+                console.error(err);
+                statusMsg.classList.replace('text-primary', 'text-red-400');
+                statusMsg.innerText = "Error: " + err.message;
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                btnText.innerText = "Generate & Save to Sheets";
+                btnIcon.innerText = "magic_button";
+                btnIcon.classList.remove('animate-spin');
+            }
+        });
+    </script>
+</body>
+</html>

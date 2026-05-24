@@ -116,7 +116,24 @@ function shuffleArray(array) {
     return array;
 }
 
+/**
+ * Appends generated rows directly to the "Generator" tab.
+ */
+async function appendGeneratedCards(sheetsAPI, spreadsheetId, newCards) {
+    const values = newCards.map(c => [
+        c.question, c.optA, c.optB, c.optC, c.optD, c.correct, c.reference
+    ]);
+
+    await sheetsAPI.spreadsheets.values.append({
+        spreadsheetId,
+        range: `'Generator'!A:G`,
+        valueInputOption: 'USER_ENTERED',
+        resource: { values }
+    });
+}
+
 module.exports = {
     fetchSessionData,
-    shuffleAndFormatQuestions
+    shuffleAndFormatQuestions,
+    appendGeneratedCards
 };
