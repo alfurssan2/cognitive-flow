@@ -1,295 +1,298 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Cognitive Flow - Study Mode</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0b1326; color: #dae2fd; overflow-x: hidden; min-height: max(884px, 100dvh); }
-        .perspective-1000 { perspective: 1000px; }
-        .preserve-3d { transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
-        .flip-card-inner { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-        .flipped .flip-card-inner { transform: rotateY(180deg); }
-        .glass-panel { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(30, 41, 58, 0.5); }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(192, 193, 255, 0.1); } 50% { box-shadow: 0 0 40px rgba(192, 193, 255, 0.2); } }
-        .active-glow { animation: pulse-glow 3s infinite ease-in-out; }
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GInI CINP Mastery Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "outline-variant": "#464554",
+                "secondary-fixed-dim": "#ddb7ff",
+                "on-primary-container": "#0d0096",
+                "tertiary": "#4edea3",
+                "on-secondary-fixed": "#2c0051",
+                "primary-fixed": "#e1e0ff",
+                "primary-container": "#8083ff",
+                "surface-dim": "#0b1326",
+                "outline": "#908fa0",
+                "on-tertiary-container": "#000703",
+                "on-error-container": "#ffdad6",
+                "on-primary-fixed": "#07006c",
+                "on-error": "#690005",
+                "surface-container": "#171f33",
+                "surface-container-lowest": "#060e20",
+                "surface-bright": "#31394d",
+                "primary": "#c0c1ff",
+                "surface-variant": "#2d3449",
+                "surface-container-highest": "#2d3449",
+                "on-tertiary-fixed": "#002113",
+                "on-primary": "#1000a9",
+                "on-background": "#dae2fd",
+                "on-tertiary-fixed-variant": "#005236",
+                "primary-fixed-dim": "#c0c1ff",
+                "background": "#0b1326",
+                "surface-tint": "#c0c1ff",
+                "on-tertiary": "#003824",
+                "error": "#ffb4ab",
+                "inverse-on-surface": "#283044",
+                "inverse-primary": "#494bd6",
+                "on-secondary-container": "#d6a9ff",
+                "tertiary-container": "#00885d",
+                "on-surface": "#dae2fd",
+                "secondary-fixed": "#f0dbff",
+                "inverse-surface": "#dae2fd",
+                "tertiary-fixed": "#6ffbbe",
+                "surface-container-low": "#131b2e",
+                "tertiary-fixed-dim": "#4edea3",
+                "surface": "#0b1326",
+                "secondary-container": "#6f00be",
+                "on-surface-variant": "#c7c4d7",
+                "on-primary-fixed-variant": "#2f2ebe",
+                "error-container": "#93000a",
+                "surface-container-high": "#222a3d",
+                "secondary": "#ddb7ff",
+                "on-secondary": "#490080",
+                "on-secondary-fixed-variant": "#6900b3"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "gutter": "24px",
+                "margin-desktop": "32px",
+                "container-max-width": "1200px",
+                "margin-mobile": "16px",
+                "base": "8px"
+        },
+        "fontFamily": {
+                "label-md": ["Inter"],
+                "body-md": ["Inter"],
+                "headline-lg": ["Inter"],
+                "title-lg": ["Inter"],
+                "headline-lg-mobile": ["Inter"],
+                "display-lg": ["Inter"],
+                "body-lg": ["Inter"]
+        }
+      }
+    }
+  }
+</script>
+<style>
+        .circular-progress { transform: rotate(-90deg); }
+        .circular-progress circle { transition: stroke-dashoffset 1s ease-in-out; }
+        
+        /* Mobile menu open state */
+        .mobile-menu-open { display: flex !important; position: fixed; width: 100%; top: 0; left: 0; height: 100%; background-color: rgba(11,19,38,0.95); z-index: 50; }
+        .mobile-menu-open > ul { margin-top: 4rem; }
     </style>
 </head>
-<body class="bg-background text-on-background min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="fixed top-0 w-full z-50 bg-surface/70 dark:bg-surface/70 backdrop-blur-xl shadow-sm border-b border-gray-800 flex items-center justify-between px-4 md:px-8 h-16">
-        <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-blue-400 font-headline-lg text-headline-lg" data-icon="brain">neurology</span>
-            <h1 class="font-headline-lg text-headline-lg font-bold text-blue-400">Cognitive Flow</h1>
+<body class="bg-surface text-on-surface font-body-lg min-h-screen flex">
+<!-- SideNavBar -->
+<nav id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-surface-container-low shadow-none hidden lg:flex flex-col py-6 border-r border-outline-variant z-50 transition-all">
+    <div class="px-6 mb-8 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center">
+                <span class="material-symbols-outlined text-on-primary-container">school</span>
+            </div>
+            <div>
+                <h1 class="font-title-md text-title-md font-black text-primary">GInI CINP</h1>
+                <p class="font-label-sm text-label-sm text-on-surface-variant">Exam Prep Pro</p>
+            </div>
+        </div>
+        <button id="close-menu-btn" class="lg:hidden text-on-surface p-2 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <ul class="flex flex-col gap-2 flex-grow">
+        <li>
+            <a class="flex items-center gap-4 bg-secondary-container text-on-secondary-container rounded-full px-4 py-3 mx-2 active:scale-98 transition-transform" href="index.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                <span class="font-label-lg text-label-lg">Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 mx-2 hover:bg-surface-variant rounded-full transition-all active:scale-98 transition-transform" href="study.html">
+                <span class="material-symbols-outlined">menu_book</span>
+                <span class="font-label-lg text-label-lg">Question Bank (Study)</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Main Content Wrapper -->
+<div class="flex-1 lg:ml-72 flex flex-col min-h-screen">
+    <!-- TopAppBar -->
+    <header class="fixed top-0 lg:left-72 right-0 z-40 bg-surface-dim/80 backdrop-blur-md shadow-sm border-b border-surface-container-high/80">
+        <div class="flex justify-between items-center px-margin-desktop h-16 w-full">
+            <button id="mobile-menu-btn" class="lg:hidden text-primary p-2 rounded-full hover:bg-primary/10 transition-colors">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div class="flex items-center gap-4">
+                <h2 class="font-headline-lg text-headline-lg font-bold text-primary hidden md:block">CINP Mastery Dashboard</h2>
+                <h2 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary md:hidden">CINP Dashboard</h2>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="study.html" class="hidden md:flex items-center gap-2 bg-primary text-on-primary font-label-lg text-label-lg rounded-full px-6 py-2.5 hover:bg-primary/90 transition-colors active:scale-95 duration-150">
+                    <span class="material-symbols-outlined text-sm">play_arrow</span>
+                    Start New Session
+                </a>
+            </div>
         </div>
     </header>
 
-    <main class="flex-1 pt-24 pb-32 px-4 md:px-8 max-w-4xl mx-auto w-full flex flex-col gap-12">
-        <!-- Progress Info -->
-        <div class="flex justify-between items-center w-full">
-            <div class="flex flex-col">
-                <span class="text-sm text-gray-400 uppercase tracking-widest">Current Session</span>
-                <span id="current-pillar-title" class="text-xl font-bold text-blue-400">Loading Session...</span>
-            </div>
-            <div class="text-right">
-                <span id="card-counter" class="text-sm text-gray-400">Card 0 / 0</span>
-                <div class="w-32 h-1 bg-gray-700 rounded-full mt-2 overflow-hidden">
-                    <div id="progress-bar-fill" class="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" style="width: 0%"></div>
+    <!-- Page Content -->
+    <main class="flex-1 pt-24 px-margin-mobile md:px-margin-desktop pb-12 w-full max-w-container-max mx-auto space-y-8 overflow-y-auto">
+        <!-- Performance Overview (Top Row) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Success Rate Card -->
+            <div class="bg-surface-container-low rounded-xl p-6 border border-white/5 relative overflow-hidden group hover:bg-surface-container transition-colors">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="font-title-md text-title-md text-on-surface-variant">Overall Success Rate</h3>
+                    <span class="material-symbols-outlined text-primary">trending_up</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- Central Flashcard Area -->
-        <div class="perspective-1000 w-full max-w-2xl mx-auto h-[650px] group" id="flashcard-container">
-            <div class="flip-card-inner relative w-full h-full preserve-3d" id="flashcard-inner">
-                <!-- Front Side -->
-                <div id="card-front" class="absolute inset-0 backface-hidden glass-panel rounded-[24px] p-8 flex flex-col shadow-2xl active-glow">
-                    <div class="flex items-start justify-between mb-8">
-                        <span class="bg-blue-900 text-blue-200 text-xs px-3 py-1 rounded-full font-bold">MULTIPLE CHOICE</span>
-                    </div>
-                    <h2 id="question-text" class="text-xl md:text-2xl text-white leading-snug mb-6 flex-1 overflow-y-auto">Generating exam environment...</h2>
-                    <div id="options-container" class="grid grid-cols-1 gap-3 mt-auto">
-                        <!-- Options injected via JS -->
-                    </div>
-                </div>
-
-                <!-- Back Side -->
-                <div id="card-back" class="absolute inset-0 backface-hidden rounded-[24px] p-8 flex flex-col shadow-2xl rotate-y-180" style="background-color: #1e293b;">
-                    <div class="flex items-center gap-2 mb-6" id="back-header">
-                        <span id="back-icon" class="material-symbols-outlined text-green-400">check_circle</span>
-                        <span id="back-status-text" class="text-sm uppercase font-bold text-green-400">Correct Answer</span>
-                    </div>
-                    
-                    <h2 id="correct-answer-display" class="text-xl font-bold mb-4 text-white overflow-y-auto max-h-32"></h2>
-                    
-                    <div class="flex-1 flex flex-col justify-center">
-                        <div class="bg-black/30 p-6 rounded-2xl backdrop-blur-sm flex gap-4 items-center">
-                            <span id="hint-icon" class="material-symbols-outlined shrink-0 text-blue-300">insights</span>
-                            <div>
-                                <p id="hint-text" class="text-md md:text-lg italic opacity-90 text-blue-100">Fetching AI Hint...</p>
-                            </div>
+                <div class="flex items-center gap-6">
+                    <div class="relative w-24 h-24">
+                        <svg class="w-full h-full circular-progress" viewbox="0 0 100 100">
+                            <circle class="text-surface-variant" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-width="8"></circle>
+                            <circle id="success-circle" class="text-primary" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round" stroke-width="8"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span id="success-rate-text" class="font-headline-lg text-headline-lg text-on-surface">0%</span>
                         </div>
                     </div>
-                    
-                    <div class="mt-auto pt-6 border-t border-gray-600 flex justify-between items-center">
-                        <span id="reference-text" class="text-sm opacity-70 text-gray-300">Ref: </span>
-                        <button id="next-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold active:scale-90 transition-all">
-                            Next Card
-                        </button>
+                    <div class="flex flex-col">
+                        <span id="correct-fraction-text" class="font-body-md text-body-md text-on-surface-variant">0/0 Correct</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Questions Completed Card -->
+            <div class="bg-surface-container-low rounded-xl p-6 border border-white/5 relative overflow-hidden group hover:bg-surface-container transition-colors">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="font-title-md text-title-md text-on-surface-variant">Questions Completed</h3>
+                    <span class="material-symbols-outlined text-secondary">done_all</span>
+                </div>
+                <div class="flex flex-col justify-center h-24">
+                    <span id="total-questions-text" class="font-display-lg text-display-lg text-on-surface">0</span>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant mt-2">Questions attempted in history</span>
                 </div>
             </div>
         </div>
 
-        <!-- Integrated Performance Dashboard -->
-        <section class="glass-panel rounded-[24px] p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="dashboard-container">
-            <!-- Dashboard dynamically rendered via JS -->
-        </section>
+        <!-- Pillar Progress (Middle Row) -->
+        <div>
+            <h2 class="font-title-lg text-title-lg text-on-surface mb-6">Pillar Progress</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="pillar-progress-container">
+                <!-- Dynamically injected -->
+            </div>
+        </div>
+        
+        <!-- Mobile Start Button -->
+        <div class="md:hidden mt-8">
+             <a href="study.html" class="w-full flex justify-center items-center gap-2 bg-primary text-on-primary font-label-lg text-label-lg rounded-full px-6 py-4 hover:bg-primary/90 transition-colors active:scale-95 duration-150">
+                <span class="material-symbols-outlined text-sm">play_arrow</span>
+                Start Studying
+            </a>
+        </div>
     </main>
+</div>
 
-    <!-- BottomNavBar -->
-    <nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface/80 dark:bg-surface/80 backdrop-blur-2xl border-t border-gray-800 flex justify-around items-center h-20 pb-safe w-full px-4">
-        <a class="flex flex-col items-center justify-center text-blue-400 rounded-full px-5 py-1" href="#">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span>
-            <span class="text-xs mt-1">Study Mode</span>
-        </a>
-    </nav>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // --- Mobile Menu Logic ---
+        const sidebar = document.getElementById('sidebar');
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const closeBtn = document.getElementById('close-menu-btn');
 
-    <script>
-        let sessionQueue = [];
-        let totalCardsInSession = 0;
-        let cardsCompleted = 0;
-        let currentQuestion = null;
-        let stats = JSON.parse(localStorage.getItem('cognitiveStats')) || {};
-
-        const container = document.getElementById('flashcard-container');
-        const questionText = document.getElementById('question-text');
-        const optionsContainer = document.getElementById('options-container');
-        const cardBack = document.getElementById('card-back');
-        const backIcon = document.getElementById('back-icon');
-        const backStatusText = document.getElementById('back-status-text');
-        const correctAnswerDisplay = document.getElementById('correct-answer-display');
-        const hintText = document.getElementById('hint-text');
-        const hintIcon = document.getElementById('hint-icon');
-        const referenceText = document.getElementById('reference-text');
-        const currentPillarTitle = document.getElementById('current-pillar-title');
-        const cardCounter = document.getElementById('card-counter');
-        const progressBarFill = document.getElementById('progress-bar-fill');
-        const dashboardContainer = document.getElementById('dashboard-container');
-
-        async function init() {
-            try {
-                const res = await fetch('/api/session');
-                const data = await res.json();
-                if (data.session && data.session.length > 0) {
-                    sessionQueue = data.session;
-                    totalCardsInSession = sessionQueue.length;
-                    renderDashboard();
-                    loadNextQuestion();
-                } else {
-                    questionText.innerText = "No questions found. Check your Settings tab in Google Sheets.";
-                }
-            } catch (err) {
-                console.error(err);
-                questionText.innerText = "Failed to connect to backend.";
-            }
-        }
-
-        function loadNextQuestion() {
-            if (sessionQueue.length === 0) {
-                questionText.innerText = "Session Complete! Great job.";
-                optionsContainer.innerHTML = "";
-                return;
-            }
-
-            currentQuestion = sessionQueue.shift();
-            
-            currentPillarTitle.innerText = currentQuestion.pillar;
-            cardCounter.innerText = `Card ${cardsCompleted + 1} / ${totalCardsInSession}`;
-            progressBarFill.style.width = `${(cardsCompleted / totalCardsInSession) * 100}%`;
-
-            questionText.innerText = currentQuestion.question;
-            
-            optionsContainer.innerHTML = "";
-            const labels = ['A', 'B', 'C', 'D'];
-            currentQuestion.options.forEach((optText, i) => {
-                const btn = document.createElement('button');
-                btn.className = "group/btn flex items-center p-4 rounded-xl border border-gray-700 bg-gray-800 hover:bg-blue-900/50 transition-all text-left w-full";
-                btn.onclick = (e) => handleAnswer(e, labels[i], optText);
-                
-                btn.innerHTML = `
-                    <span class="shrink-0 w-8 h-8 rounded-lg bg-gray-700 flex items-center justify-center font-bold text-blue-400 mr-4 group-hover/btn:bg-blue-500 group-hover/btn:text-white">${labels[i]}</span>
-                    <span class="text-gray-200 text-sm md:text-base">${optText}</span>
-                `;
-                optionsContainer.appendChild(btn);
-            });
-        }
-
-        async function handleAnswer(event, selectedLabel, selectedText) {
-            if (event) event.stopPropagation();
-            
-            const isCorrect = selectedLabel === currentQuestion.correctAnswerLabel;
-            
-            if (!stats[currentQuestion.pillar]) {
-                stats[currentQuestion.pillar] = { correct: 0, total: 0 };
-            }
-            stats[currentQuestion.pillar].total += 1;
-            
-            if (isCorrect) {
-                stats[currentQuestion.pillar].correct += 1;
-                cardsCompleted += 1;
-            } else {
-                // Backwards Regression Logic
-                const insertIndex = Math.min(Math.floor(Math.random() * 3) + 3, sessionQueue.length);
-                sessionQueue.splice(insertIndex, 0, currentQuestion);
-                totalCardsInSession += 1;
-            }
-
-            localStorage.setItem('cognitiveStats', JSON.stringify(stats));
-            renderDashboard();
-
-            correctAnswerDisplay.innerText = `${currentQuestion.correctAnswerLabel}: ${currentQuestion.correctAnswerText}`;
-            referenceText.innerText = `Ref: ${currentQuestion.reference || 'N/A'}`;
-
-            if (isCorrect) {
-                cardBack.style.backgroundColor = '#064e3b';
-                backIcon.innerText = 'check_circle';
-                backIcon.className = 'material-symbols-outlined text-green-400';
-                backStatusText.innerText = 'Correct Answer';
-                backStatusText.className = 'text-sm uppercase font-bold text-green-400';
-                hintText.innerText = "Great job! You successfully recalled this concept.";
-                hintIcon.innerText = 'emoji_events';
-                
-                container.classList.add('flipped');
-            } else {
-                cardBack.style.backgroundColor = '#4c0519';
-                backIcon.innerText = 'cancel';
-                backIcon.className = 'material-symbols-outlined text-red-400';
-                backStatusText.innerText = 'Incorrect Answer';
-                backStatusText.className = 'text-sm uppercase font-bold text-red-400';
-                hintText.innerText = "Analyzing conceptual gap with AI...";
-                hintIcon.innerText = 'psychology';
-
-                container.classList.add('flipped');
-
-                try {
-                    const res = await fetch('/api/hint', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            question: currentQuestion.question,
-                            incorrectAnswer: selectedText,
-                            correctAnswer: currentQuestion.correctAnswerText
-                        })
-                    });
-                    const hintData = await res.json();
-                    hintText.innerText = hintData.conceptual_hint;
-                    if(hintData.snapshot_icon) hintIcon.innerText = hintData.snapshot_icon;
-                } catch (e) {
-                    hintText.innerText = "Failed to load conceptual hint.";
-                }
-            }
-        }
-
-        document.getElementById('next-btn').onclick = (e) => {
-            if (e) e.stopPropagation();
-            container.classList.remove('flipped');
-            setTimeout(() => {
-                loadNextQuestion();
-            }, 300);
-        };
-
-        function renderDashboard() {
-            dashboardContainer.innerHTML = "";
-            const colors = [
-                { bg: 'bg-blue-500', text: 'text-blue-400', shadow: 'shadow-[0_0_12px_rgba(59,130,246,0.4)]' },
-                { bg: 'bg-purple-500', text: 'text-purple-400', shadow: 'shadow-[0_0_12px_rgba(168,85,247,0.4)]' },
-                { bg: 'bg-green-500', text: 'text-green-400', shadow: 'shadow-[0_0_12px_rgba(34,197,94,0.4)]' },
-                { bg: 'bg-yellow-500', text: 'text-yellow-400', shadow: 'shadow-[0_0_12px_rgba(234,179,8,0.4)]' }
-            ];
-            
-            let colorIndex = 0;
-            for (const [pillar, data] of Object.entries(stats)) {
-                if (data.total === 0) continue;
-                const percentage = Math.round((data.correct / data.total) * 100);
-                const theme = colors[colorIndex % colors.length];
-                
-                const col = document.createElement('div');
-                col.className = "flex flex-col gap-3";
-                col.innerHTML = `
-                    <div class="flex justify-between items-start gap-4">
-                        <span class="text-md md:text-lg flex gap-2 text-gray-200 overflow-hidden">
-                            <span class="material-symbols-outlined ${theme.text} shrink-0">analytics</span>
-                            <span class="line-clamp-2" title="${pillar}">${pillar}</span>
-                        </span>
-                        <div class="text-right shrink-0">
-                            <span class="${theme.text} font-bold text-xl block">${percentage}%</span>
-                            <span class="text-xs text-gray-400">${data.correct}/${data.total} correct</span>
-                        </div>
-                    </div>
-                    <div class="h-2 bg-gray-700 rounded-full overflow-hidden mt-1">
-                        <div class="h-full ${theme.bg} ${theme.shadow} transition-all duration-500" style="width: ${percentage}%"></div>
-                    </div>
-                `;
-                dashboardContainer.appendChild(col);
-                colorIndex++;
-            }
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && container.classList.contains('flipped')) {
-                e.preventDefault();
-                document.getElementById('next-btn').click();
-            }
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.add('mobile-menu-open');
+            sidebar.classList.remove('hidden');
         });
 
-        window.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-</html>
+        closeBtn.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-menu-open');
+            sidebar.classList.add('hidden');
+        });
+
+        // --- Data Binding Logic ---
+        const stats = JSON.parse(localStorage.getItem('exam_stats')) || {};
+        
+        let totalCorrect = 0;
+        let totalAttempted = 0;
+
+        const container = document.getElementById('pillar-progress-container');
+        
+        // Colors to cycle through for pillars
+        const colors = [
+            { text: 'text-primary', bg: 'bg-primary', lightBg: 'bg-primary/20' },
+            { text: 'text-secondary', bg: 'bg-secondary', lightBg: 'bg-secondary/20' },
+            { text: 'text-tertiary', bg: 'bg-tertiary', lightBg: 'bg-tertiary/20' },
+            { text: 'text-error', bg: 'bg-error', lightBg: 'bg-error/20' }
+        ];
+
+        let index = 0;
+
+        for (const [pillar, data] of Object.entries(stats)) {
+            if (data.total > 0) {
+                totalCorrect += data.correct;
+                totalAttempted += data.total;
+
+                const pct = Math.round((data.correct / data.total) * 100);
+                const theme = colors[index % colors.length];
+                
+                const card = document.createElement('div');
+                card.className = "bg-surface-container-low rounded-xl p-5 border border-white/5 flex flex-col gap-4";
+                card.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 shrink-0 rounded ${theme.lightBg} flex items-center justify-center">
+                            <span class="material-symbols-outlined ${theme.text} text-sm">analytics</span>
+                        </div>
+                        <h4 class="font-title-md text-title-md text-on-surface leading-tight flex-1 line-clamp-2" title="${pillar}">${pillar}</h4>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-body-md text-body-md text-on-surface-variant">${data.correct}/${data.total}</span>
+                            <span class="font-label-lg text-label-lg ${theme.text}">${pct}%</span>
+                        </div>
+                        <div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+                            <div class="${theme.bg} h-full rounded-full transition-all duration-1000" style="width: ${pct}%;"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+                index++;
+            }
+        }
+
+        if (index === 0) {
+            container.innerHTML = `<p class="text-gray-400 col-span-full">No questions answered yet. Start a session to build your stats!</p>`;
+        }
+
+        // Update overall stats
+        document.getElementById('total-questions-text').innerText = totalAttempted;
+        
+        if (totalAttempted > 0) {
+            const overallPct = Math.round((totalCorrect / totalAttempted) * 100);
+            document.getElementById('success-rate-text').innerText = overallPct + '%';
+            document.getElementById('correct-fraction-text').innerText = \`\${totalCorrect}/\${totalAttempted} Correct\`;
+            
+            // Update SVG Circle (Circumference is 251.2)
+            const circle = document.getElementById('success-circle');
+            const offset = 251.2 - (251.2 * overallPct) / 100;
+            // timeout to allow animation
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+            }, 100);
+        } else {
+             document.getElementById('success-circle').style.strokeDashoffset = 251.2;
+        }
+    });
+</script>
+</body></html>
