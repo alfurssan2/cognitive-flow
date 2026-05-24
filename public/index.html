@@ -229,10 +229,8 @@
         const userAvatar = document.getElementById('user-avatar');
 
         loginBtn.addEventListener('click', () => {
-            alert("Button clicked! Attempting to connect to Google...");
             auth.signInWithPopup(provider).catch(err => {
                 console.error("Login failed", err);
-                alert("Login Error: " + err.message);
             });
         });
 
