@@ -226,7 +226,11 @@
         const userAvatar = document.getElementById('user-avatar');
 
         loginBtn.addEventListener('click', () => {
-            signInWithPopup(auth, provider).catch(err => console.error("Login failed", err));
+            alert("Button clicked! Attempting to connect to Google...");
+            signInWithPopup(auth, provider).catch(err => {
+                console.error("Login failed", err);
+                alert("Login Error: " + err.message);
+            });
         });
 
         userAvatar.addEventListener('click', () => {
