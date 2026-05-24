@@ -37,7 +37,7 @@ async function fetchSessionData(sheetsAPI, spreadsheetId) {
         try {
             const pillarResponse = await sheetsAPI.spreadsheets.values.get({
                 spreadsheetId,
-                range: `${pillar.tabName}!A:G`, // Assumes: Question, OptA, OptB, OptC, OptD, CorrectAns (A/B/C/D), Reference
+                range: `'${pillar.tabName}'!A:G`, // Wraps tab name in quotes to support spaces
             });
 
             const pillarRows = pillarResponse.data.values;
