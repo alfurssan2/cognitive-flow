@@ -348,7 +348,12 @@
                 })
             });
             const data = await res.json();
-            document.getElementById('ai-hint').innerHTML = `<p>${data.hint || data.conceptual_hint || 'Explanation loaded.'}</p>`;
+            
+            if (!res.ok) {
+                document.getElementById('ai-hint').innerHTML = `<p class="text-error">\${data.error || 'Failed to load explanation.'}</p>`;
+            } else {
+                document.getElementById('ai-hint').innerHTML = `<p>\${data.hint || data.conceptual_hint || 'Explanation loaded.'}</p>`;
+            }
             
             chatHistoryArray.push({ 
                 role: 'user', 
