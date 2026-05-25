@@ -278,10 +278,12 @@
         const optionsContainer = document.getElementById('options-container');
         optionsContainer.innerHTML = '';
         
-        const options = q.options.map(o => ({
-            id: o.originalKey,
-            text: o.text
-        }));
+        const options = [
+            { id: 'A', text: q.optA },
+            { id: 'B', text: q.optB },
+            { id: 'C', text: q.optC },
+            { id: 'D', text: q.optD }
+        ];
 
         options.forEach(opt => {
             if (!opt.text) return;
@@ -300,7 +302,7 @@
         const isCorrect = selectedId === currentQuestion.correct;
         const container = document.getElementById('flashcard-inner');
         
-        const correctAnswerText = currentQuestion.options.find(o => o.originalKey === currentQuestion.correct)?.text || '';
+        const correctAnswerText = currentQuestion['opt'+currentQuestion.correct];
         
         document.getElementById('correct-answer-text').innerText = 
             `${currentQuestion.correct}: ${correctAnswerText}`;
