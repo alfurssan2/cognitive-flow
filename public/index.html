@@ -152,10 +152,14 @@
 <span class="material-symbols-outlined" data-icon="play_arrow">play_arrow</span>
                     Start Adaptive Exam
                 </a>
-<a href="study.html?mode=marathon" class="w-full py-3 px-4 bg-transparent border-2 border-error text-error font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-error/10 transition-all shadow-[0_0_15px_rgba(255,84,73,0.15)]">
+<button id="open-marathon-modal-btn" class="w-full py-3 px-4 bg-transparent border-2 border-error text-error font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-error/10 transition-all shadow-[0_0_15px_rgba(255,84,73,0.15)]">
 <span class="material-symbols-outlined" data-icon="timer">timer</span>
-                    5-Min Marathon
-                </a>
+                    Marathon Mode
+</button>
+<button id="open-mock-modal-btn" class="w-full py-3 px-4 bg-transparent border-2 border-secondary text-secondary font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-secondary/10 transition-all shadow-[0_0_15px_rgba(111,0,190,0.15)]">
+<span class="material-symbols-outlined" data-icon="workspace_premium">workspace_premium</span>
+                    Custom Mock Exam
+</button>
 </div>
 <footer class="mt-auto space-y-1">
 <a class="flex items-center gap-4 py-3 px-6 text-text-muted hover:text-text-primary transition-colors hover:bg-surface-variant/50 group" href="#">
@@ -227,6 +231,43 @@
 </div>
 </section>
 
+<!-- Level & Streak Tracker -->
+<section class="glass-card rounded-xl p-card-padding flex flex-col gap-4 relative overflow-hidden group">
+    <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+            <span class="font-title-md text-title-md text-text-primary">Daily Streak</span>
+        </div>
+        <span id="streak-count" class="text-xl font-black text-error">0 Days</span>
+    </div>
+    
+    <div class="border-t border-primary/10 pt-4 flex flex-col gap-2">
+        <div class="flex justify-between font-label-sm text-label-sm">
+            <span id="user-level" class="text-primary font-bold">Level 1 (Novice)</span>
+            <span id="user-xp" class="text-text-muted">0 / 100 XP</span>
+        </div>
+        <div class="h-2.5 w-full bg-surface-variant rounded-full overflow-hidden">
+            <div id="xp-bar-fill" class="h-full bg-gradient-to-r from-secondary to-primary rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Hall of Errors / Mistake Bank -->
+<section id="mistake-bank-card" class="glass-card rounded-xl p-card-padding flex flex-col gap-4 relative overflow-hidden group">
+    <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+        <h2 class="font-title-md text-title-md text-text-primary flex-1">Hall of Errors</h2>
+        <span id="mistake-count" class="bg-error-container text-error text-xs px-2.5 py-0.5 rounded-full font-bold">0</span>
+    </div>
+    <p id="mistake-bank-desc" class="font-body-md text-[13px] text-text-muted leading-relaxed">
+        No conceptual mistakes to review. Keep up the clean streak!
+    </p>
+    <a id="practice-mistakes-btn" href="study.html?mode=mistakes" class="w-full py-2.5 bg-error text-surface-deep font-bold rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2 hidden text-sm">
+        <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+        Practice Mistakes
+    </a>
+</section>
+
 <!-- Smart Path / Weakness Coach -->
 <section id="weakness-coach-container" class="glass-card rounded-xl p-card-padding relative overflow-hidden group hidden">
 <div class="absolute -right-12 -top-12 opacity-20 group-hover:opacity-40 transition-opacity">
@@ -264,6 +305,90 @@
 </div>
 </main>
 
+<!-- Marathon Duration Modal -->
+<div id="marathon-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-surface-deep/80 backdrop-blur-sm hidden">
+    <div class="glass-panel max-w-sm w-full p-6 rounded-2xl border border-primary/10 shadow-2xl flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
+        <div class="flex justify-between items-center">
+            <h3 class="font-title-md text-title-md text-text-primary flex items-center gap-2">
+                <span class="material-symbols-outlined text-error">timer</span> Marathon Session
+            </h3>
+            <button id="close-marathon-modal" class="text-text-muted hover:text-text-primary">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <p class="text-sm text-text-muted leading-relaxed">
+            Enter the duration for your rapid-fire marathon session in minutes. Explanations will be skipped for maximum speed.
+        </p>
+        <div class="flex flex-col gap-2">
+            <label class="text-xs uppercase font-bold tracking-wider text-text-muted">Duration (Minutes)</label>
+            <input type="number" id="marathon-duration-input" min="1" max="60" value="5" class="bg-surface-container border border-primary/10 rounded-lg px-4 py-2.5 text-text-primary focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+        </div>
+        <button id="start-marathon-btn" class="w-full py-3 bg-error text-surface-deep font-bold rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2">
+            Start Marathon
+        </button>
+    </div>
+</div>
+
+<!-- Custom Mock Exam Modal -->
+<div id="mock-exam-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-surface-deep/80 backdrop-blur-sm hidden">
+    <div class="glass-panel max-w-md w-full p-6 rounded-2xl border border-primary/10 shadow-2xl flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div class="flex justify-between items-center">
+            <h3 class="font-title-md text-title-md text-text-primary flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">workspace_premium</span> Custom Mock Exam
+            </h3>
+            <button id="close-mock-modal" class="text-text-muted hover:text-text-primary">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <div class="flex flex-col gap-4">
+            <!-- Pillars Selector -->
+            <div class="flex flex-col gap-2">
+                <label class="text-xs uppercase font-bold tracking-wider text-text-muted">Select Pillars to Include</label>
+                <div id="mock-pillars-container" class="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                    <!-- Loaded dynamically via JS -->
+                </div>
+            </div>
+            
+            <!-- Question Count -->
+            <div class="flex flex-col gap-2">
+                <label class="text-xs uppercase font-bold tracking-wider text-text-muted">Number of Questions</label>
+                <select id="mock-count-select" class="bg-surface-container border border-primary/10 rounded-lg px-4 py-2 text-text-primary focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                    <option value="10">10 Questions</option>
+                    <option value="20" selected>20 Questions</option>
+                    <option value="50">50 Questions</option>
+                    <option value="100">100 Questions</option>
+                </select>
+            </div>
+            
+            <!-- Time Limit -->
+            <div class="flex flex-col gap-2">
+                <label class="text-xs uppercase font-bold tracking-wider text-text-muted">Time Limit</label>
+                <select id="mock-time-select" class="bg-surface-container border border-primary/10 rounded-lg px-4 py-2 text-text-primary focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                    <option value="0">No Limit</option>
+                    <option value="15">15 Minutes</option>
+                    <option value="30" selected>30 Minutes</option>
+                    <option value="45">45 Minutes</option>
+                    <option value="60">60 Minutes</option>
+                </select>
+            </div>
+            
+            <!-- Passing Score -->
+            <div class="flex flex-col gap-2">
+                <div class="flex justify-between">
+                    <label class="text-xs uppercase font-bold tracking-wider text-text-muted">Passing Score</label>
+                    <span id="mock-pass-display" class="text-xs font-bold text-primary">70%</span>
+                </div>
+                <input type="range" id="mock-pass-range" min="50" max="95" step="5" value="70" class="w-full h-1 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-secondary">
+            </div>
+        </div>
+        
+        <button id="start-mock-btn" class="w-full py-3 bg-primary text-surface-deep font-bold rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2">
+            Start Mock Exam
+        </button>
+    </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
@@ -294,27 +419,177 @@
                 userProfile.classList.add('flex');
                 userAvatar.src = user.photoURL || 'https://via.placeholder.com/40';
                 
-                const docRef = db.collection("users").doc(user.uid);
-                const docSnap = await docRef.get();
-                let cloudStats = {};
-                if (docSnap.exists) {
-                    cloudStats = docSnap.data().exam_stats || {};
-                }
-                
-                const localStats = JSON.parse(localStorage.getItem('exam_stats')) || {};
-                let merged = { ...localStats, ...cloudStats };
-                localStorage.setItem('exam_stats', JSON.stringify(merged));
-                
-                await docRef.set({ exam_stats: merged }, { merge: true });
-                renderStats(merged);
+                await syncUserDataAndRender(user);
             } else {
                 loginBtn.classList.remove('hidden');
                 userProfile.classList.add('hidden');
                 userProfile.classList.remove('flex');
-                const localStats = JSON.parse(localStorage.getItem('exam_stats')) || {};
-                renderStats(localStats);
+                
+                await syncUserDataAndRender(null);
             }
         });
+
+        function getLevelName(lvl) {
+            if (lvl === 1) return "Novice";
+            if (lvl === 2) return "Apprentice";
+            if (lvl === 3) return "Practitioner";
+            if (lvl === 4) return "Specialist";
+            if (lvl === 5) return "Expert";
+            if (lvl === 6) return "Master";
+            return "Cognitive Guru";
+        }
+
+        async function syncUserDataAndRender(user) {
+            let localData = {
+                exam_stats: JSON.parse(localStorage.getItem('exam_stats')) || {},
+                streak: parseInt(localStorage.getItem('streak')) || 0,
+                last_study_date: localStorage.getItem('last_study_date') || "",
+                total_xp: parseInt(localStorage.getItem('total_xp')) || 0,
+                mistake_bank: JSON.parse(localStorage.getItem('mistake_bank')) || [],
+                blacklist: JSON.parse(localStorage.getItem('blacklist')) || []
+            };
+
+            if (user) {
+                try {
+                    const docRef = db.collection("users").doc(user.uid);
+                    const docSnap = await docRef.get();
+                    if (docSnap.exists) {
+                        const cloud = docSnap.data();
+                        localData.exam_stats = { ...localData.exam_stats, ...(cloud.exam_stats || {}) };
+                        localData.streak = Math.max(localData.streak, cloud.streak || 0);
+                        localData.last_study_date = cloud.last_study_date || localData.last_study_date;
+                        localData.total_xp = Math.max(localData.total_xp, cloud.total_xp || 0);
+                        
+                        // Merge mistake bank
+                        const mBankMap = new Map();
+                        [...(localData.mistake_bank || []), ...(cloud.mistake_bank || [])].forEach(q => {
+                            if (q && q.question) mBankMap.set(q.question, q);
+                        });
+                        localData.mistake_bank = Array.from(mBankMap.values());
+
+                        // Merge blacklist
+                        localData.blacklist = Array.from(new Set([...(localData.blacklist || []), ...(cloud.blacklist || [])]));
+                        
+                        // Save back to local storage
+                        localStorage.setItem('exam_stats', JSON.stringify(localData.exam_stats));
+                        localStorage.setItem('streak', localData.streak);
+                        localStorage.setItem('last_study_date', localData.last_study_date);
+                        localStorage.setItem('total_xp', localData.total_xp);
+                        localStorage.setItem('mistake_bank', JSON.stringify(localData.mistake_bank));
+                        localStorage.setItem('blacklist', JSON.stringify(localData.blacklist));
+                    }
+                    // Write back merged to Firestore
+                    await docRef.set(localData, { merge: true });
+                } catch (e) {
+                    console.error("Cloud sync failed, using local storage:", e);
+                }
+            }
+
+            // Check if streak was broken (e.g. last session was before yesterday)
+            const activeStreak = checkStreakReset(localData.last_study_date, localData.streak);
+            if (activeStreak !== localData.streak) {
+                localData.streak = activeStreak;
+                localStorage.setItem('streak', activeStreak);
+                if (user) {
+                    db.collection("users").doc(user.uid).set({ streak: activeStreak }, { merge: true }).catch(console.error);
+                }
+            }
+
+            // Render Streak & XP
+            document.getElementById('streak-count').innerText = `${localData.streak} Day${localData.streak === 1 ? '' : 's'}`;
+            const level = Math.floor(localData.total_xp / 100) + 1;
+            const xpInLevel = localData.total_xp % 100;
+            document.getElementById('user-level').innerText = `Level ${level} (${getLevelName(level)})`;
+            document.getElementById('user-xp').innerText = `${xpInLevel} / 100 XP (Total: ${localData.total_xp})`;
+            document.getElementById('xp-bar-fill').style.width = `${xpInLevel}%`;
+
+            // Render Mistake Bank
+            const mCount = localData.mistake_bank ? localData.mistake_bank.length : 0;
+            document.getElementById('mistake-count').innerText = mCount;
+            const desc = document.getElementById('mistake-bank-desc');
+            const btn = document.getElementById('practice-mistakes-btn');
+            if (mCount > 0) {
+                desc.innerText = `You have ${mCount} conceptual mistake${mCount === 1 ? '' : 's'} waiting to be cleared in your mistake bank.`;
+                btn.classList.remove('hidden');
+            } else {
+                desc.innerText = "No conceptual mistakes to review. Keep up the clean streak!";
+                btn.classList.add('hidden');
+            }
+
+            // Render Stats
+            renderStats(localData.exam_stats);
+
+            // Populate mock pillars
+            populateMockPillars(localData.exam_stats);
+        }
+
+        function checkStreakReset(lastStudyDate, currentStreak) {
+            if (!lastStudyDate) return 0;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const parts = lastStudyDate.split('-');
+            if (parts.length !== 3) return 0;
+            const compareDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            compareDate.setHours(0, 0, 0, 0);
+
+            const diffTime = today - compareDate;
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays > 1) {
+                return 0; // Streak broken
+            }
+            return currentStreak;
+        }
+
+        // We can populate mock pillars from either our active stats, or from fetched session questions
+        let availablePillars = new Set();
+        async function populateMockPillars(stats) {
+            const container = document.getElementById('mock-pillars-container');
+            container.innerHTML = '';
+
+            // Ensure we have some default pillars or pull them from stats
+            for (const pillar of Object.keys(stats)) {
+                availablePillars.add(pillar);
+            }
+
+            // Also try to load the session pillars dynamically by calling api
+            try {
+                const res = await fetch('/api/session');
+                const data = await res.json();
+                if (data.session) {
+                    data.session.forEach(q => {
+                        if (q.pillar) availablePillars.add(q.pillar);
+                    });
+                }
+            } catch (e) {
+                console.error("Could not fetch pillars dynamically:", e);
+            }
+
+            if (availablePillars.size === 0) {
+                // Default CInP pillars fallback
+                const defaults = [
+                    "Innovation Culture",
+                    "Innovation Leadership",
+                    "Innovation Management System",
+                    "Design Thinking & Ideation",
+                    "Business Model Innovation",
+                    "Innovation Strategy"
+                ];
+                defaults.forEach(p => availablePillars.add(p));
+            }
+
+            availablePillars.forEach(p => {
+                // Avoid duplicating element check
+                if (document.getElementById(`mock-pillar-${p.replace(/\s+/g, '-')}`)) return;
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-3 p-2 bg-surface-container rounded-lg border border-primary/5 hover:border-primary/20 transition-all";
+                div.innerHTML = `
+                    <input type="checkbox" name="mock-pillars" value="${p}" checked id="mock-pillar-${p.replace(/\s+/g, '-')}" class="rounded border-outline-variant bg-surface-container-low text-secondary focus:ring-secondary focus:ring-offset-surface-container">
+                    <label for="mock-pillar-${p.replace(/\s+/g, '-')}" class="text-sm font-medium text-text-primary cursor-pointer select-none flex-1">${p}</label>
+                `;
+                container.appendChild(div);
+            });
+        }
 
         function renderStats(stats) {
             let totalCorrect = 0;
@@ -384,13 +659,67 @@
             if (weakestPillar && lowestScore < 70) {
                 coachContainer.classList.remove('hidden');
                 weaknessText.innerHTML = `Based on your last session, you should focus on <span class="text-primary font-semibold">${weakestPillar}</span> to optimize your mastery score.`;
-                weaknessBtn.href = `study.html?pillar=${encodeURIComponent(weakestPillar)}`;
+                weaknessBtn.href = `study.html?pillar=${encodeURIComponent(weakestPillar)}&mode=focus`;
             } else {
                 coachContainer.classList.add('hidden');
             }
         }
-        
-        renderStats(JSON.parse(localStorage.getItem('exam_stats')) || {});
+
+        // Marathon Modal logic
+        const marathonModal = document.getElementById('marathon-modal');
+        const openMarathonBtn = document.getElementById('open-marathon-modal-btn');
+        const closeMarathonBtn = document.getElementById('close-marathon-modal');
+        const startMarathonBtn = document.getElementById('start-marathon-btn');
+        const marathonDurationInput = document.getElementById('marathon-duration-input');
+
+        openMarathonBtn.addEventListener('click', () => {
+            marathonModal.classList.remove('hidden');
+        });
+        closeMarathonBtn.addEventListener('click', () => {
+            marathonModal.classList.add('hidden');
+        });
+        marathonModal.addEventListener('click', (e) => {
+            if (e.target === marathonModal) marathonModal.classList.add('hidden');
+        });
+        startMarathonBtn.addEventListener('click', () => {
+            const mins = parseInt(marathonDurationInput.value) || 5;
+            window.location.href = `study.html?mode=marathon&duration=${mins}`;
+        });
+
+        // Mock Exam Modal logic
+        const mockModal = document.getElementById('mock-exam-modal');
+        const openMockBtn = document.getElementById('open-mock-modal-btn');
+        const closeMockBtn = document.getElementById('close-mock-modal');
+        const startMockBtn = document.getElementById('start-mock-btn');
+        const passRange = document.getElementById('mock-pass-range');
+        const passDisplay = document.getElementById('mock-pass-display');
+
+        openMockBtn.addEventListener('click', () => {
+            mockModal.classList.remove('hidden');
+        });
+        closeMockBtn.addEventListener('click', () => {
+            mockModal.classList.add('hidden');
+        });
+        mockModal.addEventListener('click', (e) => {
+            if (e.target === mockModal) mockModal.classList.add('hidden');
+        });
+        passRange.addEventListener('input', () => {
+            passDisplay.innerText = `${passRange.value}%`;
+        });
+        startMockBtn.addEventListener('click', () => {
+            const checkedPillars = Array.from(document.querySelectorAll('input[name="mock-pillars"]:checked'))
+                .map(input => input.value);
+            if (checkedPillars.length === 0) {
+                alert("Please select at least one pillar to include in the mock exam!");
+                return;
+            }
+            const count = document.getElementById('mock-count-select').value;
+            const time = document.getElementById('mock-time-select').value;
+            const pass = passRange.value;
+            
+            const pParam = encodeURIComponent(checkedPillars.join(','));
+            window.location.href = `study.html?mode=mock&pillars=${pParam}&count=${count}&duration=${time}&pass=${pass}`;
+        });
 
         const sidebar = document.getElementById('sidebar');
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');

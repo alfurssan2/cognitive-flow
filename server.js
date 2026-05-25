@@ -69,6 +69,49 @@ app.post('/api/hint', async (req, res) => {
     }
 });
 
+// Endpoint to fetch AI workbook-based hint for Focus Sessions
+app.post('/api/focus-hint', async (req, res) => {
+    const { question, incorrectAnswer, correctAnswer } = req.body;
+    if (!question || !incorrectAnswer || !correctAnswer) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+    
+    try {
+        const workbookName = "CInP Course Workbook - V1.5 .pdf";
+        const message = `The student answered a multiple-choice question incorrectly.
+Question: "${question}"
+Student's Incorrect Answer: "${incorrectAnswer}"
+Correct Answer: "${correctAnswer}"
+
+Search the workbook for explanations about this concept.
+Provide a highly targeted conceptual hint based on the workbook's materials.
+You must return a strictly formatted JSON object with exactly two keys:
+1. "conceptual_hint": A maximum 1-2 sentence string explaining the concept from the workbook.
+2. "snapshot_icon": A single string representing a relevant Material 3 icon name (e.g., "menu_book", "import_contacts", "school").
+
+Return ONLY valid JSON.`;
+
+        const replyText = await chatWithPDF(workbookName, message);
+        
+        let hintData;
+        try {
+            const jsonMatch = replyText.match(/```json\n([\s\S]*?)\n```/) || replyText.match(/```\n([\s\S]*?)\n```/);
+            const jsonString = jsonMatch ? jsonMatch[1] : replyText;
+            hintData = JSON.parse(jsonString.trim());
+        } catch (parseError) {
+            console.warn("Failed to parse JSON response from PDF tutor, using fallback layout.", parseError);
+            hintData = {
+                conceptual_hint: replyText.substring(0, 200) + "...",
+                snapshot_icon: "menu_book"
+            };
+        }
+        res.json(hintData);
+    } catch (error) {
+        console.error("Focus Hint Error:", error);
+        res.status(500).json({ error: "Failed to fetch workbook hint" });
+    }
+});
+
 // Endpoint for conversational follow-ups
 app.post('/api/chat', async (req, res) => {
     const { history, message } = req.body;

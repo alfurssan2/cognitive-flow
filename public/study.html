@@ -89,7 +89,7 @@
         </div>
 
         <!-- Live Scoreboard -->
-        <div id="live-scoreboard" class="w-full max-w-4xl mt-8 grid grid-cols-2 gap-4 hidden">
+        <div id="live-scoreboard" class="w-full max-w-4xl mt-8 grid grid-cols-3 gap-4 hidden">
             <div class="glass-panel p-4 rounded-xl border border-primary/10 flex flex-col items-center justify-center">
                 <span class="text-xs uppercase text-text-muted font-bold tracking-widest">Questions</span>
                 <span id="live-questions" class="text-2xl font-black text-text-primary mt-1">0</span>
@@ -97,6 +97,10 @@
             <div class="glass-panel p-4 rounded-xl border border-green-500/20 flex flex-col items-center justify-center bg-green-500/5">
                 <span class="text-xs uppercase text-green-500 font-bold tracking-widest">Accuracy</span>
                 <span id="live-accuracy" class="text-2xl font-black text-green-400 mt-1">0%</span>
+            </div>
+            <div class="glass-panel p-4 rounded-xl border border-secondary/20 flex flex-col items-center justify-center bg-secondary/5 text-center">
+                <span class="text-xs uppercase text-secondary font-bold tracking-widest" id="live-section-title">Current Pillar</span>
+                <span id="live-section-rate" class="text-base font-black text-primary mt-1 truncate max-w-full">General (0%)</span>
             </div>
         </div>
 
@@ -111,6 +115,9 @@
                 <div id="card-front" class="col-start-1 row-start-1 backface-hidden glass-panel rounded-xl p-8 flex flex-col shadow-2xl transition-colors min-h-[400px]">
                     <div class="flex items-start justify-between mb-8">
                         <span class="bg-primary/20 text-primary text-xs px-3 py-1 rounded-full font-bold uppercase tracking-widest">Multiple Choice</span>
+                        <button id="blacklist-btn-front" class="text-text-muted hover:text-error transition-colors flex items-center gap-1 text-xs font-semibold" title="Don't show this question again">
+                            <span class="material-symbols-outlined text-[16px]">visibility_off</span> Block Question
+                        </button>
                     </div>
                     <h2 id="question-text" class="font-title-md text-2xl text-text-primary leading-snug mb-8">Loading question...</h2>
                     <div id="options-container" class="grid grid-cols-1 gap-4">
@@ -120,9 +127,14 @@
 
                 <!-- Back Side -->
                 <div id="card-back" class="col-start-1 row-start-1 backface-hidden glass-panel rounded-xl p-8 flex flex-col shadow-2xl rotate-y-180 min-h-[400px]">
-                    <div class="flex items-center gap-2 mb-6" id="back-header">
-                        <span id="back-icon" class="material-symbols-outlined text-success-neon">check_circle</span>
-                        <span id="back-status-text" class="text-sm uppercase font-bold text-success-neon">Correct Answer</span>
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-2" id="back-header">
+                            <span id="back-icon" class="material-symbols-outlined text-success-neon">check_circle</span>
+                            <span id="back-status-text" class="text-sm uppercase font-bold text-success-neon">Correct Answer</span>
+                        </div>
+                        <button id="blacklist-btn-back" class="text-text-muted hover:text-error transition-colors flex items-center gap-1 text-xs font-semibold" title="Don't show this question again">
+                            <span class="material-symbols-outlined text-[16px]">visibility_off</span> Block Question
+                        </button>
                     </div>
                     <div class="p-4 bg-surface-container-low rounded-lg border border-primary/10 mb-6">
                         <p class="text-lg text-text-primary font-medium" id="correct-answer-text">Loading...</p>
@@ -176,67 +188,229 @@
     </div>
 </main>
 
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+<script src="./firebase-config.js"></script>
+
 <script>
     let questions = [];
     let currentQuestionIndex = 0;
     let score = 0;
     let chatHistoryArray = [];
+    let sessionPillarStats = {};
+    let marathonMistakes = [];
+    let isMarathon = false;
+    let isMock = false;
+    let isMistakes = false;
+    let passingScore = 70;
+    let mockDuration = 0;
+    let marathonInterval = null;
+    let userData = {
+        exam_stats: {},
+        streak: 0,
+        last_study_date: "",
+        total_xp: 0,
+        mistake_bank: [],
+        blacklist: []
+    };
+
+    // Firebase Auth Sync
+    async function getUserData() {
+        const user = auth.currentUser;
+        let localData = {
+            exam_stats: JSON.parse(localStorage.getItem('exam_stats')) || {},
+            streak: parseInt(localStorage.getItem('streak')) || 0,
+            last_study_date: localStorage.getItem('last_study_date') || "",
+            total_xp: parseInt(localStorage.getItem('total_xp')) || 0,
+            mistake_bank: JSON.parse(localStorage.getItem('mistake_bank')) || [],
+            blacklist: JSON.parse(localStorage.getItem('blacklist')) || []
+        };
+
+        if (user) {
+            try {
+                const docRef = db.collection("users").doc(user.uid);
+                const docSnap = await docRef.get();
+                if (docSnap.exists) {
+                    const cloudData = docSnap.data();
+                    
+                    const mergedData = {
+                        exam_stats: { ...localData.exam_stats, ...(cloudData.exam_stats || {}) },
+                        streak: Math.max(localData.streak, cloudData.streak || 0),
+                        last_study_date: cloudData.last_study_date || localData.last_study_date,
+                        total_xp: Math.max(localData.total_xp, cloudData.total_xp || 0),
+                        mistake_bank: mergeMistakeBank(localData.mistake_bank, cloudData.mistake_bank || []),
+                        blacklist: Array.from(new Set([...(localData.blacklist || []), ...(cloudData.blacklist || [])]))
+                    };
+
+                    localStorage.setItem('exam_stats', JSON.stringify(mergedData.exam_stats));
+                    localStorage.setItem('streak', mergedData.streak);
+                    localStorage.setItem('last_study_date', mergedData.last_study_date);
+                    localStorage.setItem('total_xp', mergedData.total_xp);
+                    localStorage.setItem('mistake_bank', JSON.stringify(mergedData.mistake_bank));
+                    localStorage.setItem('blacklist', JSON.stringify(mergedData.blacklist));
+
+                    return mergedData;
+                }
+            } catch (e) {
+                console.error("Error fetching cloud data, using local:", e);
+            }
+        }
+        return localData;
+    }
+
+    function mergeMistakeBank(local, cloud) {
+        const map = new Map();
+        [...local, ...cloud].forEach(q => {
+            if (q && q.question) map.set(q.question, q);
+        });
+        return Array.from(map.values());
+    }
+
+    async function saveUserData(data) {
+        if (data.exam_stats) localStorage.setItem('exam_stats', JSON.stringify(data.exam_stats));
+        if (data.streak !== undefined) localStorage.setItem('streak', data.streak);
+        if (data.last_study_date !== undefined) localStorage.setItem('last_study_date', data.last_study_date);
+        if (data.total_xp !== undefined) localStorage.setItem('total_xp', data.total_xp);
+        if (data.mistake_bank) localStorage.setItem('mistake_bank', JSON.stringify(data.mistake_bank));
+        if (data.blacklist) localStorage.setItem('blacklist', JSON.stringify(data.blacklist));
+
+        const user = auth.currentUser;
+        if (user) {
+            try {
+                const docRef = db.collection("users").doc(user.uid);
+                await docRef.set(data, { merge: true });
+            } catch (e) {
+                console.error("Error saving cloud data:", e);
+            }
+        }
+    }
 
     document.addEventListener("DOMContentLoaded", async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const specificPillar = urlParams.get('pillar');
-        const isMarathon = urlParams.get('mode') === 'marathon';
-        let marathonInterval = null;
-        
-        if (isMarathon) {
-            document.getElementById('session-pillar').innerText = `Marathon Mode`;
-            document.getElementById('marathon-timer-container').classList.remove('hidden');
-        } else if (specificPillar) {
-            document.getElementById('session-pillar').innerText = `${specificPillar} Focus`;
-        }
+        isMarathon = urlParams.get('mode') === 'marathon';
+        isMock = urlParams.get('mode') === 'mock';
+        isMistakes = urlParams.get('mode') === 'mistakes';
 
-        try {
-            const url = specificPillar ? `/api/session?pillar=${encodeURIComponent(specificPillar)}` : '/api/session';
-            const res = await fetch(url);
-            const data = await res.json();
-            
-            if (!res.ok) throw new Error(data.error || "Failed to fetch session");
-            
-            questions = data.session || [];
-            
-            // Randomize questions
-            questions = questions.sort(() => 0.5 - Math.random());
-            
+        // Wait for Firebase Auth initialization
+        auth.onAuthStateChanged(async (user) => {
+            userData = await getUserData();
+            initSession();
+        });
+
+        async function initSession() {
+            let limitCount = 20;
+
             if (isMarathon) {
-                let timeLeft = 300;
-                marathonInterval = setInterval(() => {
-                    timeLeft--;
-                    if (timeLeft <= 0) {
-                        clearInterval(marathonInterval);
-                        showCompletion();
+                document.getElementById('session-pillar').innerText = `Marathon Mode`;
+                document.getElementById('marathon-timer-container').classList.remove('hidden');
+                document.querySelector('#marathon-timer-container span').innerText = "Marathon Time Remaining";
+            } else if (isMistakes) {
+                document.getElementById('session-pillar').innerText = `Mistakes Practice`;
+            } else if (isMock) {
+                document.getElementById('session-pillar').innerText = `Mock Exam`;
+                passingScore = parseInt(urlParams.get('pass')) || 70;
+                mockDuration = parseInt(urlParams.get('duration')) || 30;
+                limitCount = parseInt(urlParams.get('count')) || 20;
+                if (mockDuration > 0) {
+                    document.getElementById('marathon-timer-container').classList.remove('hidden');
+                    document.querySelector('#marathon-timer-container span').innerText = "Mock Exam Time Remaining";
+                }
+            } else if (specificPillar) {
+                document.getElementById('session-pillar').innerText = `${specificPillar} Focus`;
+            }
+
+            try {
+                if (isMistakes) {
+                    questions = userData.mistake_bank || [];
+                    questions = questions.sort(() => 0.5 - Math.random());
+                } else {
+                    const url = specificPillar ? `/api/session?pillar=${encodeURIComponent(specificPillar)}` : '/api/session';
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    
+                    if (!res.ok) throw new Error(data.error || "Failed to fetch session");
+                    
+                    questions = data.session || [];
+                    questions = questions.sort(() => 0.5 - Math.random());
+
+                    // Exclude blacklisted questions
+                    const blacklist = userData.blacklist || [];
+                    questions = questions.filter(q => !blacklist.includes(q.question));
+
+                    // Filter by pillars for custom mock exam if specified
+                    if (isMock && urlParams.get('pillars')) {
+                        const activePillars = urlParams.get('pillars').split(',');
+                        questions = questions.filter(q => activePillars.includes(q.pillar));
+                    }
+
+                    // Slice questions
+                    if (isMarathon) {
+                        questions = questions.slice(0, 100);
                     } else {
+                        questions = questions.slice(0, limitCount);
+                    }
+                }
+                
+                if (isMarathon) {
+                    const urlDuration = parseInt(urlParams.get('duration')) || 5;
+                    let timeLeft = urlDuration * 60;
+                    
+                    // Display initial timer
+                    const updateTimerDisplay = () => {
                         const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
                         const s = (timeLeft % 60).toString().padStart(2, '0');
                         document.getElementById('marathon-timer').innerText = `${m}:${s}`;
-                    }
-                }, 1000);
-            } else {
-                questions = questions.slice(0, 20);
+                    };
+                    updateTimerDisplay();
+
+                    marathonInterval = setInterval(() => {
+                        timeLeft--;
+                        if (timeLeft <= 0) {
+                            clearInterval(marathonInterval);
+                            showCompletion();
+                        } else {
+                            updateTimerDisplay();
+                        }
+                    }, 1000);
+                } else if (isMock && mockDuration > 0) {
+                    let timeLeft = mockDuration * 60;
+                    
+                    const updateTimerDisplay = () => {
+                        const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                        const s = (timeLeft % 60).toString().padStart(2, '0');
+                        document.getElementById('marathon-timer').innerText = `${m}:${s}`;
+                    };
+                    updateTimerDisplay();
+
+                    marathonInterval = setInterval(() => {
+                        timeLeft--;
+                        if (timeLeft <= 0) {
+                            clearInterval(marathonInterval);
+                            showCompletion();
+                        } else {
+                            updateTimerDisplay();
+                        }
+                    }, 1000);
+                }
+                
+                if (questions.length === 0) {
+                    document.getElementById('loading-spinner').innerHTML = isMistakes ? 
+                        "No mistakes in your mistake bank yet! Keep studying." : 
+                        "No questions found for this topic!";
+                    return;
+                }
+                
+                document.getElementById('loading-spinner').classList.add('hidden');
+                document.getElementById('flashcard-container').classList.remove('hidden');
+                document.getElementById('live-scoreboard').classList.remove('hidden');
+                loadQuestion();
+                
+            } catch (error) {
+                document.getElementById('loading-spinner').innerHTML = `<span class="text-error">Error: ${error.message}</span>`;
+                console.error(error);
             }
-            
-            if (questions.length === 0) {
-                document.getElementById('loading-spinner').innerHTML = "No questions found for this topic!";
-                return;
-            }
-            
-            document.getElementById('loading-spinner').classList.add('hidden');
-            document.getElementById('flashcard-container').classList.remove('hidden');
-            document.getElementById('live-scoreboard').classList.remove('hidden');
-            loadQuestion();
-            
-        } catch (error) {
-            document.getElementById('loading-spinner').innerHTML = `<span class="text-error">Error: ${error.message}</span>`;
-            console.error(error);
         }
 
         document.getElementById('next-btn').addEventListener('click', () => {
@@ -307,7 +481,34 @@
                 sidebar.classList.toggle('-translate-x-full');
             });
         }
+
+        // Set up Blacklist event listeners
+        document.getElementById('blacklist-btn-front').addEventListener('click', blacklistCurrentQuestion);
+        document.getElementById('blacklist-btn-back').addEventListener('click', blacklistCurrentQuestion);
     });
+
+    async function blacklistCurrentQuestion() {
+        if (!confirm("Are you sure you want to blacklist this question? It will never appear in your study sessions again.")) return;
+        const q = questions[currentQuestionIndex];
+        if (!q) return;
+
+        if (!userData.blacklist) userData.blacklist = [];
+        if (!userData.blacklist.includes(q.question)) {
+            userData.blacklist.push(q.question);
+            await saveUserData(userData);
+        }
+
+        // Remove from current active pool
+        document.getElementById('flashcard-inner').classList.remove('flipped');
+        setTimeout(() => {
+            questions.splice(currentQuestionIndex, 1);
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showCompletion();
+            }
+        }, 600);
+    }
 
     function loadQuestion() {
         const q = questions[currentQuestionIndex];
@@ -318,6 +519,13 @@
         if (currentQuestionIndex > 0) {
             document.getElementById('live-accuracy').innerText = `${Math.round((score / currentQuestionIndex) * 100)}%`;
         }
+
+        // Update Pillar Section in Live Scoreboard
+        const currentPillar = q.pillar || "General";
+        document.getElementById('live-section-title').innerText = currentPillar;
+        const pStats = sessionPillarStats[currentPillar];
+        const pRate = pStats && pStats.total > 0 ? Math.round((pStats.correct / pStats.total) * 100) : 0;
+        document.getElementById('live-section-rate').innerText = `${pRate}% (${pStats ? pStats.correct : 0}/${pStats ? pStats.total : 0})`;
         
         document.getElementById('question-text').innerText = q.question;
         const optionsContainer = document.getElementById('options-container');
@@ -342,22 +550,63 @@
         });
     }
 
-    async function handleAnswer(selectedId, selectedText, currentQuestion, clickedBtn) {
+    function handleAnswer(selectedId, selectedText, currentQuestion, clickedBtn) {
         const isCorrect = selectedId === currentQuestion.correctAnswerLabel;
         const container = document.getElementById('flashcard-inner');
+        const currentPillar = currentQuestion.pillar || "General";
         
         if (isCorrect) score++;
+
+        // Update session pillar stats
+        if (!sessionPillarStats[currentPillar]) {
+            sessionPillarStats[currentPillar] = { correct: 0, total: 0 };
+        }
+        sessionPillarStats[currentPillar].total++;
+        if (isCorrect) sessionPillarStats[currentPillar].correct++;
         
         // Update live stats immediately
-        document.getElementById('live-questions').innerText = `\${currentQuestionIndex + 1}`;
-        document.getElementById('live-accuracy').innerText = `\${Math.round((score / (currentQuestionIndex + 1)) * 100)}%`;
+        document.getElementById('live-questions').innerText = `${currentQuestionIndex + 1}`;
+        document.getElementById('live-accuracy').innerText = `${Math.round((score / (currentQuestionIndex + 1)) * 100)}%`;
 
-        const isMarathon = new URLSearchParams(window.location.search).get('mode') === 'marathon';
+        // Update Live Section Accuracy
+        const pStats = sessionPillarStats[currentPillar];
+        const pRate = Math.round((pStats.correct / pStats.total) * 100);
+        document.getElementById('live-section-rate').innerText = `${pRate}% (${pStats.correct}/${pStats.total})`;
+
+        // Handle Mistake Bank
+        if (!isMarathon) {
+            if (!isCorrect) {
+                // Add to mistake bank
+                const exists = userData.mistake_bank.some(m => m.question === currentQuestion.question);
+                if (!exists) {
+                    userData.mistake_bank.push(currentQuestion);
+                    saveUserData(userData);
+                }
+            } else if (isMistakes) {
+                // Remove from mistake bank if answered correctly in Mistakes mode
+                userData.mistake_bank = userData.mistake_bank.filter(m => m.question !== currentQuestion.question);
+                saveUserData(userData);
+            }
+        }
+
+        // Handle Marathon Mode (Instant progression, no flip cards)
         if (isMarathon) {
+            if (!isCorrect) {
+                marathonMistakes.push({
+                    question: currentQuestion.question,
+                    selected: `${selectedId}: ${selectedText}`,
+                    correct: `${currentQuestion.correctAnswerLabel}: ${currentQuestion.correctAnswerText}`
+                });
+            }
             if (clickedBtn) {
+                clickedBtn.classList.remove('hover:border-secondary', 'bg-surface-container-low', 'hover:bg-surface-container');
                 clickedBtn.classList.add(isCorrect ? 'bg-green-500/20' : 'bg-error/20');
                 clickedBtn.classList.add(isCorrect ? 'border-green-500' : 'border-error');
             }
+            // Block other clicks
+            const buttons = document.getElementById('options-container').querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+
             setTimeout(() => {
                 currentQuestionIndex++;
                 if (currentQuestionIndex < questions.length) {
@@ -368,12 +617,21 @@
             }, 300);
             return;
         }
+
+        // Track mistakes locally for Mock Exam to review at the end
+        if (isMock && !isCorrect) {
+            marathonMistakes.push({
+                question: currentQuestion.question,
+                selected: `${selectedId}: ${selectedText}`,
+                correct: `${currentQuestion.correctAnswerLabel}: ${currentQuestion.correctAnswerText}`
+            });
+        }
         
         const correctAnswerText = currentQuestion.correctAnswerText;
         
         document.getElementById('correct-answer-text').innerText = 
             `${currentQuestion.correctAnswerLabel}: ${correctAnswerText}`;
-        document.getElementById('back-reference').innerText = currentQuestion.reference;
+        document.getElementById('back-reference').innerText = currentQuestion.reference || "";
         
         const header = document.getElementById('back-header');
         const icon = document.getElementById('back-icon');
@@ -391,26 +649,36 @@
             statusText.className = "text-sm uppercase font-bold text-error";
         }
 
-        // Save to local stats immediately
-        const stats = JSON.parse(localStorage.getItem('exam_stats')) || {};
-        const pillar = currentQuestion.pillar || "General";
-        if (!stats[pillar]) stats[pillar] = { total: 0, correct: 0 };
-        stats[pillar].total += 1;
-        if (isCorrect) stats[pillar].correct += 1;
-        localStorage.setItem('exam_stats', JSON.stringify(stats));
+        // Save overall progress stats
+        if (!userData.exam_stats[currentPillar]) {
+            userData.exam_stats[currentPillar] = { total: 0, correct: 0 };
+        }
+        userData.exam_stats[currentPillar].total += 1;
+        if (isCorrect) userData.exam_stats[currentPillar].correct += 1;
+        saveUserData(userData);
 
-        // Fetch AI Hint
+        // Flip card immediately
+        container.classList.add('flipped');
+
+        // Fetch AI Explanation in the background (Non-blocking)
+        fetchAIHint(currentQuestion, selectedId, selectedText, isCorrect);
+    }
+
+    async function fetchAIHint(currentQuestion, selectedId, selectedText, isCorrect) {
         document.getElementById('ai-hint').innerHTML = `<span class="material-symbols-outlined animate-spin text-primary">refresh</span> Generating logic...`;
         document.getElementById('chat-history').innerHTML = '';
         chatHistoryArray = [];
 
         try {
-            const res = await fetch('/api/hint', {
+            const isFocusSession = new URLSearchParams(window.location.search).get('mode') === 'focus' || new URLSearchParams(window.location.search).has('pillar');
+            const hintEndpoint = isFocusSession ? '/api/focus-hint' : '/api/hint';
+
+            const res = await fetch(hintEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     question: currentQuestion.question,
-                    correctAnswer: `${currentQuestion.correctAnswerLabel}: ${correctAnswerText}`,
+                    correctAnswer: `${currentQuestion.correctAnswerLabel}: ${currentQuestion.correctAnswerText}`,
                     incorrectAnswer: `${selectedId}: ${selectedText}`
                 })
             });
@@ -419,25 +687,47 @@
             if (!res.ok) {
                 document.getElementById('ai-hint').innerHTML = `<p class="text-error">${data.error || 'Failed to load explanation.'}</p>`;
             } else {
-                document.getElementById('ai-hint').innerHTML = `<p>${data.hint || data.conceptual_hint || 'Explanation loaded.'}</p>`;
+                document.getElementById('ai-hint').innerHTML = `<p>${data.conceptual_hint || data.hint || 'Explanation loaded.'}</p>`;
             }
             
             chatHistoryArray.push({ 
                 role: 'user', 
                 parts: [{ text: isCorrect ? 
                     `I correctly answered "${selectedText}" to the question "${currentQuestion.question}". I might have a follow up question.` : 
-                    `I incorrectly answered "${selectedText}" to the question "${currentQuestion.question}". The correct answer is "${correctAnswerText}".` }] 
+                    `I incorrectly answered "${selectedText}" to the question "${currentQuestion.question}". The correct answer is "${currentQuestion.correctAnswerText}".` }] 
             });
             chatHistoryArray.push({ role: 'model', parts: [{ text: data.conceptual_hint || data.error || "Explanation loaded." }] });
 
         } catch (e) {
             document.getElementById('ai-hint').innerText = "Failed to load explanation.";
         }
-        
-        container.classList.add('flipped');
     }
 
-    function showCompletion() {
+    function getLocalDateString() {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function isYesterday(dateStr) {
+        if (!dateStr) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const parts = dateStr.split('-');
+        const compareDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        compareDate.setHours(0, 0, 0, 0);
+
+        const diffTime = today - compareDate;
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays === 1;
+    }
+
+    async function showCompletion() {
+        if (marathonInterval) clearInterval(marathonInterval);
+
         document.getElementById('flashcard-container').classList.add('hidden');
         document.getElementById('marathon-timer-container').classList.add('hidden');
         document.getElementById('live-scoreboard').classList.add('hidden');
@@ -449,6 +739,98 @@
         
         document.getElementById('progress-bar-fill').style.width = `100%`;
         document.getElementById('progress-text').innerText = `100%`;
+
+        // Calculate and award XP
+        const xpEarned = (score * 10) + 50;
+        userData.total_xp = (userData.total_xp || 0) + xpEarned;
+
+        // Daily streak logic
+        const todayStr = getLocalDateString();
+        if (!userData.last_study_date) {
+            userData.streak = 1;
+            userData.last_study_date = todayStr;
+        } else if (userData.last_study_date === todayStr) {
+            // Already studied today
+        } else if (isYesterday(userData.last_study_date)) {
+            userData.streak = (userData.streak || 0) + 1;
+            userData.last_study_date = todayStr;
+        } else {
+            userData.streak = 1;
+            userData.last_study_date = todayStr;
+        }
+
+        // Save updated data
+        await saveUserData(userData);
+
+        // Display XP Reward
+        const rewardDiv = document.createElement('div');
+        rewardDiv.className = "bg-secondary-container/20 border border-secondary/30 px-6 py-2 rounded-full font-bold text-secondary animate-bounce mb-6 text-sm flex items-center gap-2 justify-center";
+        rewardDiv.innerHTML = `<span class="material-symbols-outlined text-[18px]">workspace_premium</span> +${xpEarned} XP Earned!`;
+        const completionScreen = document.getElementById('completion-screen');
+        completionScreen.insertBefore(rewardDiv, completionScreen.querySelector('.grid'));
+
+        // Handle Custom Mock Exam special layout (Pass/Fail)
+        if (isMock) {
+            const hasPassed = accuracy >= passingScore;
+            const banner = document.createElement('div');
+            banner.className = `w-full p-4 rounded-xl border mb-6 text-center font-bold text-lg ${hasPassed ? 'bg-green-500/10 border-green-500 text-green-400' : 'bg-error/10 border-error text-error'}`;
+            banner.innerHTML = hasPassed ? 
+                `🎉 MOCK EXAM PASSED! (Score: ${accuracy}% - Target: ${passingScore}%)` : 
+                `❌ MOCK EXAM FAILED (Score: ${accuracy}% - Target: ${passingScore}%)`;
+            completionScreen.insertBefore(banner, completionScreen.firstChild);
+
+            // Pillar breakdown
+            const breakdownDiv = document.createElement('div');
+            breakdownDiv.id = "mock-pillar-breakdown";
+            breakdownDiv.className = "w-full mt-6 text-left border-t border-primary/10 pt-6";
+            breakdownDiv.innerHTML = `<h3 class="font-title-md text-sm uppercase text-text-muted font-bold mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">analytics</span> Score Breakdown
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs"></div>`;
+            const breakdownList = breakdownDiv.querySelector('.grid');
+            for (const [pillar, stats] of Object.entries(sessionPillarStats)) {
+                const pct = Math.round((stats.correct / stats.total) * 100);
+                const div = document.createElement('div');
+                div.className = "p-3 bg-surface-container-low border border-primary/5 rounded-lg flex justify-between items-center";
+                div.innerHTML = `
+                    <span class="text-xs text-text-primary truncate mr-2">${pillar}</span>
+                    <span class="text-sm font-bold ${pct >= passingScore ? 'text-green-400' : 'text-error'}">${pct}% (${stats.correct}/${stats.total})</span>
+                `;
+                breakdownList.appendChild(div);
+            }
+            completionScreen.appendChild(breakdownDiv);
+        }
+
+        // Render Mistakes Review list if present
+        if ((isMarathon || isMock) && marathonMistakes.length > 0) {
+            const reviewDiv = document.createElement('div');
+            reviewDiv.className = "w-full mt-6 text-left border-t border-primary/10 pt-6";
+            reviewDiv.innerHTML = `
+                <h3 class="font-title-md text-sm uppercase text-error font-bold mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">warning</span> Mistakes Review (${marathonMistakes.length})
+                </h3>
+                <div class="glass-panel p-4 rounded-xl border border-primary/10 max-h-60 overflow-y-auto custom-scrollbar flex flex-col gap-4">
+                </div>
+            `;
+            const reviewList = reviewDiv.querySelector('.glass-panel');
+            marathonMistakes.forEach((m, idx) => {
+                const item = document.createElement('div');
+                item.className = "pb-4 border-b border-primary/5 last:border-0 last:pb-0";
+                item.innerHTML = `
+                    <p class="text-sm font-semibold text-text-primary mb-1.5">${idx + 1}. ${m.question}</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] leading-relaxed">
+                        <div class="text-error bg-error/5 border border-error/10 px-3 py-1.5 rounded">
+                            <span class="font-bold">Your answer:</span> ${m.selected}
+                        </div>
+                        <div class="text-green-400 bg-green-500/5 border border-green-500/10 px-3 py-1.5 rounded">
+                            <span class="font-bold">Correct answer:</span> ${m.correct}
+                        </div>
+                    </div>
+                `;
+                reviewList.appendChild(item);
+            });
+            completionScreen.appendChild(reviewDiv);
+        }
     }
 </script>
 </body></html>

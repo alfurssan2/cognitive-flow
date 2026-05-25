@@ -20,7 +20,7 @@ async function getCognitiveHint(question, incorrectAnswer, correctAnswer) {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `You are a cognitive psychology tutor. 
 The student answered a multiple-choice question incorrectly.
@@ -60,7 +60,7 @@ async function chatWithTutor(history, message) {
     if (!process.env.GEMINI_API_KEY) return "I'm sorry, my AI backend is currently offline.";
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const chat = model.startChat({
         history: history || [],
@@ -81,7 +81,7 @@ async function chatWithTutor(history, message) {
 async function generateCards(topic, numQuestions) {
     if (!process.env.GEMINI_API_KEY) throw new Error("Gemini API Key missing.");
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `You are a professional certification exam writer. 
 Generate exactly ${numQuestions} multiple-choice questions about the topic: "${topic}".
@@ -111,7 +111,7 @@ Return ONLY valid JSON.`;
 async function chatWithPDF(pdfName, message) {
     if (!process.env.GEMINI_API_KEY) throw new Error("Gemini API Key missing.");
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     if (!fileManager) {
         fileManager = new GoogleAIFileManager(process.env.GEMINI_API_KEY);
