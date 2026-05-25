@@ -132,7 +132,7 @@ async function chatWithPDF(pdfName, message) {
             displayName: pdfName,
         });
         
-        fileUri = uploadResult.file.name;
+        fileUri = uploadResult.file.uri; // Fix: Use file.uri instead of file.name
         uploadedFilesCache[pdfName] = fileUri;
         console.log(`Upload complete! URI: ${fileUri}`);
     }
