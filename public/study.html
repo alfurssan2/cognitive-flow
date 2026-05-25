@@ -173,7 +173,7 @@
         }
 
         try {
-            const url = specificPillar ? \`/api/session?pillar=\${encodeURIComponent(specificPillar)}\` : '/api/session';
+            const url = specificPillar ? `/api/session?pillar=${encodeURIComponent(specificPillar)}` : '/api/session';
             const res = await fetch(url);
             const data = await res.json();
             
