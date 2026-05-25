@@ -82,6 +82,24 @@
 
     <!-- Content Area -->
     <div class="flex-1 p-gutter max-w-4xl mx-auto w-full flex flex-col items-center justify-center">
+        
+        <div id="marathon-timer-container" class="hidden mb-6 flex flex-col items-center justify-center bg-surface-container-high px-6 py-3 rounded-2xl border border-error/30 shadow-[0_0_15px_rgba(255,84,73,0.15)]">
+            <span class="text-[10px] uppercase font-bold text-error tracking-widest mb-1">Marathon Time Remaining</span>
+            <span id="marathon-timer" class="font-title-lg text-4xl text-error font-black tabular-nums">05:00</span>
+        </div>
+
+        <!-- Live Scoreboard -->
+        <div id="live-scoreboard" class="w-full max-w-4xl mt-8 grid grid-cols-2 gap-4 hidden">
+            <div class="glass-panel p-4 rounded-xl border border-primary/10 flex flex-col items-center justify-center">
+                <span class="text-xs uppercase text-text-muted font-bold tracking-widest">Questions</span>
+                <span id="live-questions" class="text-2xl font-black text-text-primary mt-1">0</span>
+            </div>
+            <div class="glass-panel p-4 rounded-xl border border-green-500/20 flex flex-col items-center justify-center bg-green-500/5">
+                <span class="text-xs uppercase text-green-500 font-bold tracking-widest">Accuracy</span>
+                <span id="live-accuracy" class="text-2xl font-black text-green-400 mt-1">0%</span>
+            </div>
+        </div>
+
         <div id="loading-spinner" class="text-primary text-xl flex items-center gap-3">
             <span class="material-symbols-outlined animate-spin">refresh</span> Loading cognitive modules...
         </div>
@@ -167,8 +185,13 @@
     document.addEventListener("DOMContentLoaded", async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const specificPillar = urlParams.get('pillar');
+        const isMarathon = urlParams.get('mode') === 'marathon';
+        let marathonInterval = null;
         
-        if (specificPillar) {
+        if (isMarathon) {
+            document.getElementById('session-pillar').innerText = `Marathon Mode`;
+            document.getElementById('marathon-timer-container').classList.remove('hidden');
+        } else if (specificPillar) {
             document.getElementById('session-pillar').innerText = `${specificPillar} Focus`;
         }
 
@@ -181,8 +204,25 @@
             
             questions = data.session || [];
             
-            // Randomize and limit to 10
-            questions = questions.sort(() => 0.5 - Math.random()).slice(0, 10);
+            // Randomize questions
+            questions = questions.sort(() => 0.5 - Math.random());
+            
+            if (isMarathon) {
+                let timeLeft = 300;
+                marathonInterval = setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft <= 0) {
+                        clearInterval(marathonInterval);
+                        showCompletion();
+                    } else {
+                        const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                        const s = (timeLeft % 60).toString().padStart(2, '0');
+                        document.getElementById('marathon-timer').innerText = `${m}:${s}`;
+                    }
+                }, 1000);
+            } else {
+                questions = questions.slice(0, 20);
+            }
             
             if (questions.length === 0) {
                 document.getElementById('loading-spinner').innerHTML = "No questions found for this topic!";
@@ -191,10 +231,11 @@
             
             document.getElementById('loading-spinner').classList.add('hidden');
             document.getElementById('flashcard-container').classList.remove('hidden');
+            document.getElementById('live-scoreboard').classList.remove('hidden');
             loadQuestion();
             
         } catch (error) {
-            document.getElementById('loading-spinner').innerHTML = `<span class="text-error">Error: \${error.message}</span>`;
+            document.getElementById('loading-spinner').innerHTML = `<span class="text-error">Error: ${error.message}</span>`;
             console.error(error);
         }
 
@@ -270,9 +311,13 @@
 
     function loadQuestion() {
         const q = questions[currentQuestionIndex];
-        const pct = Math.round(((currentQuestionIndex) / questions.length) * 100);
-        document.getElementById('progress-bar-fill').style.width = `${pct}%`;
-        document.getElementById('progress-text').innerText = `${currentQuestionIndex}/${questions.length}`;
+        document.getElementById('progress-bar-fill').style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+        document.getElementById('progress-text').innerText = `${currentQuestionIndex + 1}/${questions.length}`;
+        
+        document.getElementById('live-questions').innerText = `${currentQuestionIndex}`;
+        if (currentQuestionIndex > 0) {
+            document.getElementById('live-accuracy').innerText = `${Math.round((score / currentQuestionIndex) * 100)}%`;
+        }
         
         document.getElementById('question-text').innerText = q.question;
         const optionsContainer = document.getElementById('options-container');
@@ -301,6 +346,8 @@
         const isCorrect = selectedId === currentQuestion.correctAnswerLabel;
         const container = document.getElementById('flashcard-inner');
         
+        if (isCorrect) score++;
+        
         const correctAnswerText = currentQuestion.correctAnswerText;
         
         document.getElementById('correct-answer-text').innerText = 
@@ -312,7 +359,6 @@
         const statusText = document.getElementById('back-status-text');
 
         if (isCorrect) {
-            score++;
             icon.innerText = "check_circle";
             icon.className = "material-symbols-outlined text-success-neon";
             statusText.innerText = "Correct Answer";
@@ -350,9 +396,9 @@
             const data = await res.json();
             
             if (!res.ok) {
-                document.getElementById('ai-hint').innerHTML = `<p class="text-error">\${data.error || 'Failed to load explanation.'}</p>`;
+                document.getElementById('ai-hint').innerHTML = `<p class="text-error">${data.error || 'Failed to load explanation.'}</p>`;
             } else {
-                document.getElementById('ai-hint').innerHTML = `<p>\${data.hint || data.conceptual_hint || 'Explanation loaded.'}</p>`;
+                document.getElementById('ai-hint').innerHTML = `<p>${data.hint || data.conceptual_hint || 'Explanation loaded.'}</p>`;
             }
             
             chatHistoryArray.push({ 
@@ -372,11 +418,13 @@
 
     function showCompletion() {
         document.getElementById('flashcard-container').classList.add('hidden');
+        document.getElementById('marathon-timer-container').classList.add('hidden');
+        document.getElementById('live-scoreboard').classList.add('hidden');
         document.getElementById('completion-screen').classList.remove('hidden');
         
-        const pct = Math.round((score / questions.length) * 100);
-        document.getElementById('final-score').innerText = `${pct}%`;
-        document.getElementById('final-count').innerText = `${score} / ${questions.length}`;
+        const accuracy = Math.round((score / Math.max(currentQuestionIndex, 1)) * 100) || 0;
+        document.getElementById('final-score').innerText = `${accuracy}%`;
+        document.getElementById('final-count').innerText = `${score} / ${currentQuestionIndex}`;
         
         document.getElementById('progress-bar-fill').style.width = `100%`;
         document.getElementById('progress-text').innerText = `100%`;

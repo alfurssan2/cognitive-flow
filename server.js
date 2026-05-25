@@ -17,6 +17,10 @@ const sheetsAPI = google.sheets({
     auth: process.env.GOOGLE_API_KEY 
 });
 
+let cachedSession = null;
+let lastCacheTime = 0;
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
 // Endpoint to fetch and shuffle the exam bank
 app.get('/api/session', async (req, res) => {
     try {
@@ -24,7 +28,17 @@ app.get('/api/session', async (req, res) => {
         if (!spreadsheetId) throw new Error("SPREADSHEET_ID not configured in .env");
         if (!process.env.GOOGLE_API_KEY) throw new Error("GOOGLE_API_KEY not configured in .env");
 
-        const rawSession = await fetchSessionData(sheetsAPI, spreadsheetId);
+        let rawSession;
+        if (cachedSession && (Date.now() - lastCacheTime < CACHE_DURATION_MS)) {
+            rawSession = cachedSession;
+            console.log("Serving session from cache.");
+        } else {
+            rawSession = await fetchSessionData(sheetsAPI, spreadsheetId);
+            cachedSession = rawSession;
+            lastCacheTime = Date.now();
+            console.log("Fetched new session from Sheets.");
+        }
+        
         let session = shuffleAndFormatQuestions(rawSession);
         
         // Filter for specific pillar if requested (Weakness Coach feature)

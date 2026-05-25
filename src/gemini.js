@@ -71,7 +71,7 @@ async function chatWithTutor(history, message) {
         return result.response.text();
     } catch (error) {
         console.error("Error in chatWithTutor:", error);
-        return "I'm having trouble processing that right now. Please try again.";
+        return "AI System Error: " + error.message;
     }
 }
 
