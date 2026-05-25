@@ -278,12 +278,11 @@
         const optionsContainer = document.getElementById('options-container');
         optionsContainer.innerHTML = '';
         
-        const options = [
-            { id: 'A', text: q.optA },
-            { id: 'B', text: q.optB },
-            { id: 'C', text: q.optC },
-            { id: 'D', text: q.optD }
-        ];
+        const labels = ['A', 'B', 'C', 'D'];
+        const options = q.options.map((text, index) => ({
+            id: labels[index],
+            text: text
+        }));
 
         options.forEach(opt => {
             if (!opt.text) return;
@@ -299,13 +298,13 @@
     }
 
     async function handleAnswer(selectedId, selectedText, currentQuestion) {
-        const isCorrect = selectedId === currentQuestion.correct;
+        const isCorrect = selectedId === currentQuestion.correctAnswerLabel;
         const container = document.getElementById('flashcard-inner');
         
-        const correctAnswerText = currentQuestion['opt'+currentQuestion.correct];
+        const correctAnswerText = currentQuestion.correctAnswerText;
         
         document.getElementById('correct-answer-text').innerText = 
-            `${currentQuestion.correct}: ${correctAnswerText}`;
+            `${currentQuestion.correctAnswerLabel}: ${correctAnswerText}`;
         document.getElementById('back-reference').innerText = currentQuestion.reference;
         
         const header = document.getElementById('back-header');
@@ -344,7 +343,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     question: currentQuestion.question,
-                    correct: `${currentQuestion.correct}: ${correctAnswerText}`,
+                    correct: `${currentQuestion.correctAnswerLabel}: ${correctAnswerText}`,
                     selected: `${selectedId}: ${selectedText}`
                 })
             });
