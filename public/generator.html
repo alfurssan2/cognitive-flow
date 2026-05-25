@@ -1,121 +1,296 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>AI Generator - Cognitive Flow</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#adc6ff",
-                        "on-primary": "#102f60",
-                        "primary-container": "#2b4678",
-                        "on-primary-container": "#d8e2ff",
-                        background: "#111318",
-                        "on-background": "#e2e2e9",
-                        surface: "#111318",
-                        "on-surface": "#e2e2e9",
-                        "surface-variant": "#44474f",
-                        "on-surface-variant": "#c4c6d0",
-                        "surface-container-low": "#1c1b1f"
-                    }
-                }
-            }
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CogniStudy | AI Studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b1326;
+            color: #dbe2fd;
+            margin: 0;
+            overflow-x: hidden;
+            overflow-y: hidden; /* Prevent body scroll since dual panes have their own */
         }
-    </script>
+        .glass-card {
+            background: rgba(19, 27, 46, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(192, 193, 255, 0.1);
+        }
+        .neon-glow-purple {
+            box-shadow: 0 0 20px rgba(111, 0, 190, 0.2);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c0c1ff; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed": "#f0dbff",
+                      "text-primary": "#DAE2FD",
+                      "inverse-primary": "#585990",
+                      "inverse-on-surface": "#283044",
+                      "surface-container-high": "#222a3e",
+                      "error": "#ffb4ab",
+                      "tertiary-container": "#4edea3",
+                      "surface-bright": "#31394e",
+                      "on-primary": "#292b5e",
+                      "background": "#0b1326",
+                      "text-muted": "#8A94AD",
+                      "on-secondary-fixed-variant": "#6800b3",
+                      "surface-container-lowest": "#060d20",
+                      "tertiary": "#6ffbbd",
+                      "on-secondary-container": "#d6aaff",
+                      "on-primary-fixed-variant": "#404176",
+                      "surface-variant": "#2d3449",
+                      "on-tertiary-fixed": "#002113",
+                      "surface-container-low": "#131b2e",
+                      "on-background": "#dbe2fd",
+                      "on-primary-container": "#4b4d83",
+                      "focus-glow": "rgba(111, 0, 190, 0.4)",
+                      "on-tertiary-fixed-variant": "#005236",
+                      "on-tertiary-container": "#005f40",
+                      "surface-dim": "#0b1326",
+                      "surface-container-highest": "#2d3449",
+                      "on-secondary": "#490080",
+                      "surface-container": "#171f33",
+                      "on-tertiary": "#003824",
+                      "on-error": "#690005",
+                      "surface": "#0b1326",
+                      "secondary-fixed-dim": "#ddb8ff",
+                      "inverse-surface": "#dbe2fd",
+                      "tertiary-fixed": "#6ffbbe",
+                      "success-neon": "#10B981",
+                      "primary-fixed-dim": "#c0c1ff",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "primary-fixed": "#e1e0ff",
+                      "outline": "#918f9a",
+                      "primary": "#e1dfff",
+                      "on-secondary-fixed": "#2c0051",
+                      "surface-elevated": "#131B2E",
+                      "on-surface": "#dbe2fd",
+                      "surface-tint": "#c0c1ff",
+                      "on-primary-fixed": "#131449",
+                      "surface-deep": "#0B1326",
+                      "primary-container": "#c0c1ff",
+                      "secondary-container": "#6f00be",
+                      "outline-variant": "#46464f",
+                      "error-container": "#93000a",
+                      "on-surface-variant": "#c7c5d0",
+                      "secondary": "#ddb8ff",
+                      "on-error-container": "#ffdad6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "card-padding": "24px",
+                      "gutter": "24px",
+                      "base-unit": "8px",
+                      "section-gap": "64px",
+                      "margin-mobile": "16px",
+                      "container-max": "1200px"
+              },
+              "fontFamily": {
+                      "display-lg": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "title-md": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+      </script>
 </head>
-<body class="bg-background text-on-background min-h-screen flex flex-col font-sans selection:bg-primary/30">
-    <header class="sticky top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-white/10 h-16 flex items-center justify-between px-4 md:px-8">
-        <div class="flex items-center gap-4">
-            <a href="index.html" class="flex items-center gap-2 text-primary hover:text-white transition-colors">
-                <span class="material-symbols-outlined text-sm">arrow_back</span>
-                <span class="text-sm font-bold uppercase tracking-wider hidden md:inline">Dashboard</span>
-            </a>
-            <div class="h-6 w-px bg-white/10 hidden md:block"></div>
-            <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
-                <h1 class="text-lg font-bold text-on-surface">AI Content Generator</h1>
+<body class="bg-surface-deep text-on-surface h-screen">
+<!-- Sidebar Navigation -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col bg-surface-container dark:bg-surface-container border-r border-primary/10 shadow-xl shadow-secondary-container/5 z-50">
+<div class="flex flex-col h-full py-8 space-y-2">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary tracking-tight">CogniStudy</h1>
+<p class="font-label-sm text-label-sm text-text-muted">Premium Focus</p>
+</div>
+<nav class="flex-1">
+<a class="flex items-center gap-4 py-3 px-6 text-text-muted hover:text-text-primary transition-colors hover:bg-surface-variant/50 group" href="/">
+<span class="material-symbols-outlined group-hover:text-primary" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<!-- AI Studio Active -->
+<a class="flex items-center gap-4 py-3 px-6 text-primary bg-secondary-container/20 border-r-4 border-secondary-container transition-all translate-x-1 duration-300" href="generator.html">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-body-md text-body-md">AI Studio</span>
+</a>
+</nav>
+<div class="px-6 py-4">
+<a href="study.html" class="w-full py-3 px-4 bg-primary text-surface-deep font-bold rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined" data-icon="play_arrow">play_arrow</span>
+                    Start Session
+                </a>
+</div>
+</div>
+</aside>
+
+<!-- Top App Bar -->
+<header class="docked full-width top-0 sticky z-40 bg-surface-container/80 backdrop-blur-md shadow-sm border-b border-primary/10 flex justify-between items-center h-20 px-gutter w-full ml-64 max-w-[calc(100%-16rem)]">
+<div class="flex items-center gap-4 flex-1">
+    <h2 class="font-title-md text-title-md text-text-primary">AI Studio & Library</h2>
+</div>
+<div class="flex items-center gap-4">
+    <!-- File Selector -->
+    <select id="pdf-selector" class="bg-surface-deep border border-outline-variant rounded-lg py-2 px-4 text-sm text-primary focus:outline-none focus:border-primary">
+        <option value="materials/CInP Course Workbook - V1.5 .pdf">Course Workbook V1.5</option>
+        <option value="materials/CInP Glossary.pdf">Glossary</option>
+        <option value="materials/CInP Question Bank.pdf">Question Bank</option>
+        <option value="materials/CInP Answer Key.pdf">Answer Key</option>
+    </select>
+</div>
+</header>
+
+<!-- Main Workspace Canvas (Dual Pane) -->
+<main class="ml-64 w-[calc(100%-16rem)] h-[calc(100vh-5rem)] flex">
+    
+    <!-- Left Pane: PDF Viewer (60%) -->
+    <div class="w-3/5 h-full border-r border-primary/10 bg-surface-container-lowest">
+        <iframe id="pdf-viewer" class="w-full h-full" src="materials/CInP Course Workbook - V1.5 .pdf"></iframe>
+    </div>
+
+    <!-- Right Pane: AI Assistant (40%) -->
+    <div class="w-2/5 h-full bg-surface-deep overflow-y-auto p-6 flex flex-col gap-6 relative">
+        
+        <!-- Tabs -->
+        <div class="flex border-b border-primary/10">
+            <button id="tab-gen" class="flex-1 py-3 font-title-md text-sm font-bold text-primary border-b-2 border-primary transition-colors">Flashcard Generator</button>
+            <button id="tab-chat" class="flex-1 py-3 font-title-md text-sm font-bold text-text-muted border-b-2 border-transparent hover:text-primary transition-colors">Chat with PDF</button>
+        </div>
+
+        <!-- Generator View -->
+        <div id="view-gen" class="flex flex-col gap-6">
+            <div class="glass-card rounded-xl p-card-padding">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-secondary text-3xl" data-icon="generating_tokens">generating_tokens</span>
+                    <div>
+                        <h2 class="font-title-md text-title-md text-text-primary">Flashcard Generator</h2>
+                        <p class="font-label-sm text-text-muted">Create questions from the material</p>
+                    </div>
+                </div>
+
+                <form id="generate-form" class="space-y-4">
+                    <div>
+                        <label class="block font-label-sm text-label-sm text-text-muted mb-1">Topic / Section</label>
+                        <input type="text" id="topic" required class="w-full bg-surface-container-highest border border-outline-variant rounded-lg px-4 py-3 text-text-primary focus:ring-2 focus:ring-secondary focus:border-transparent outline-none transition-all" placeholder="e.g., Scenario Planning (Page 42)">
+                    </div>
+
+                    <div>
+                        <label class="block font-label-sm text-label-sm text-text-muted mb-1">Number of Questions</label>
+                        <select id="num-questions" class="w-full bg-surface-container-highest border border-outline-variant rounded-lg px-4 py-3 text-text-primary focus:ring-2 focus:ring-secondary focus:border-transparent outline-none transition-all appearance-none cursor-pointer">
+                            <option value="3">3 Questions</option>
+                            <option value="5">5 Questions</option>
+                            <option value="10">10 Questions</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" id="gen-btn" class="w-full mt-4 py-3 bg-secondary-container text-on-secondary-container font-bold rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined" data-icon="magic_button">magic_button</span>
+                        Generate
+                    </button>
+                </form>
+                
+                <div id="status-message" class="text-center font-label-sm text-sm mt-4 hidden"></div>
+            </div>
+
+            <div id="results-container" class="flex flex-col gap-4 hidden pb-10">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-title-md text-title-md text-primary">Generated Flashcards</h3>
+                </div>
+                <div class="bg-surface-container-high/50 p-4 rounded-lg border border-primary/10">
+                    <span class="font-label-sm text-secondary uppercase tracking-widest text-[10px] block mb-1">Action Required</span>
+                    <p class="font-body-md text-sm text-text-muted">Your API Key is read-only. Highlight and copy these questions to your 'Generator' Google Sheet tab.</p>
+                </div>
+                <div id="cards-list" class="flex flex-col gap-4"></div>
             </div>
         </div>
-    </header>
 
-    <main class="flex-1 w-full max-w-2xl mx-auto p-6 md:p-12 flex flex-col items-center justify-center">
-        <div class="w-full bg-surface-container-low rounded-3xl p-8 border border-white/5 shadow-2xl relative overflow-hidden">
-            <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
-
-            <div class="relative z-10 flex flex-col gap-6">
-                <div>
-                    <h2 class="text-2xl font-bold text-white mb-2">Generate Flashcards</h2>
-                    <p class="text-on-surface-variant text-sm">Create new multiple-choice questions using Gemini AI. They will be automatically appended to the "Generator" tab in your Google Sheet.</p>
+        <!-- Chat View -->
+        <div id="view-chat" class="flex-col gap-6 hidden h-full">
+            <div class="glass-card rounded-xl p-card-padding flex-1 flex flex-col min-h-0">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-tertiary text-3xl" data-icon="forum">forum</span>
+                    <div>
+                        <h2 class="font-title-md text-title-md text-text-primary">PDF Assistant</h2>
+                        <p class="font-label-sm text-text-muted">Ask questions about the selected document</p>
+                    </div>
                 </div>
-
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-semibold text-gray-300">Topic</label>
-                    <input type="text" id="topic-input" class="bg-background border border-surface-variant rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Agile Methodology, Strategy Execution...">
+                
+                <div id="pdf-chat-history" class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 mb-4">
+                    <div class="flex gap-2 items-start">
+                        <span class="material-symbols-outlined text-tertiary text-sm mt-1">auto_awesome</span>
+                        <p class="text-sm bg-surface-container-low p-3 rounded-lg border border-primary/10 text-text-primary">Hello! Select a PDF from the top bar and ask me any questions about its content.</p>
+                    </div>
                 </div>
-
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-semibold text-gray-300">Number of Questions</label>
-                    <select id="num-input" class="bg-background border border-surface-variant rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none">
-                        <option value="1">1 Question</option>
-                        <option value="3" selected>3 Questions</option>
-                        <option value="5">5 Questions</option>
-                        <option value="10">10 Questions</option>
-                    </select>
-                </div>
-
-                <button id="generate-btn" class="mt-4 bg-primary text-on-primary font-bold rounded-xl py-4 flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98]">
-                    <span class="material-symbols-outlined" id="btn-icon">magic_button</span>
-                    <span id="btn-text">Generate & Save to Sheets</span>
-                </button>
-
-                <div id="status-message" class="text-center text-sm font-medium mt-2 hidden"></div>
-
-                <div id="results-container" class="mt-6 flex flex-col gap-4 hidden">
-                    <h3 class="text-lg font-bold text-white mb-2">Generated Flashcards</h3>
-                    <p class="text-sm text-yellow-400 bg-yellow-400/10 p-3 rounded-lg mb-2">
-                        <span class="font-bold uppercase tracking-wider text-xs block mb-1">Action Required</span>
-                        Your Google API Key is read-only, so we couldn't automatically save these to your sheet. You can manually copy and paste them into your 'Generator' tab!
-                    </p>
-                    <div id="cards-list" class="flex flex-col gap-3"></div>
+                
+                <div class="flex gap-2 mt-auto">
+                    <input type="text" id="pdf-chat-input" placeholder="e.g. Summarize the key points on page 10..." class="flex-1 bg-surface-container-highest border border-outline-variant rounded-lg px-4 py-3 text-text-primary focus:ring-2 focus:ring-tertiary focus:border-transparent outline-none transition-all">
+                    <button id="pdf-chat-send" class="bg-tertiary text-surface-deep px-4 py-3 rounded-lg font-bold hover:brightness-110 flex items-center justify-center transition-all">
+                        <span class="material-symbols-outlined">send</span>
+                    </button>
                 </div>
             </div>
         </div>
-    </main>
 
-    <script>
-        const btn = document.getElementById('generate-btn');
-        const topicInput = document.getElementById('topic-input');
-        const numInput = document.getElementById('num-input');
-        const btnText = document.getElementById('btn-text');
-        const btnIcon = document.getElementById('btn-icon');
+    </div>
+</main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Handle PDF Selector
+        const pdfSelector = document.getElementById('pdf-selector');
+        const pdfViewer = document.getElementById('pdf-viewer');
+        pdfSelector.addEventListener('change', (e) => {
+            pdfViewer.src = e.target.value;
+        });
+
+        // Handle Generator
+        const form = document.getElementById('generate-form');
+        const btn = document.getElementById('gen-btn');
         const statusMsg = document.getElementById('status-message');
+        const topicInput = document.getElementById('topic');
 
-        btn.addEventListener('click', async () => {
-            const topic = topicInput.value.trim();
-            const numQuestions = parseInt(numInput.value);
-
-            if (!topic) {
-                alert("Please enter a topic.");
-                return;
-            }
-
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
             btn.disabled = true;
-            btn.classList.add('opacity-70', 'cursor-not-allowed');
-            btnText.innerText = "Generating with AI...";
-            btnIcon.innerText = "hourglass_empty";
-            btnIcon.classList.add('animate-spin');
-            
-            statusMsg.classList.remove('hidden', 'text-error', 'text-green-400');
-            statusMsg.classList.add('text-primary');
-            statusMsg.innerText = "Writing questions and connecting to Google Sheets...";
+            btn.innerHTML = `<span class="material-symbols-outlined animate-spin" data-icon="refresh">refresh</span> Generating...`;
+            statusMsg.classList.add('hidden');
+            document.getElementById('results-container').classList.add('hidden');
+
+            const topic = topicInput.value;
+            const numQuestions = document.getElementById('num-questions').value;
 
             try {
                 const res = await fetch('/api/generate-cards', {
@@ -127,44 +302,110 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    if (data.savedToSheets) {
-                        statusMsg.classList.replace('text-primary', 'text-green-400');
-                        statusMsg.innerText = `Successfully generated and saved ${data.added} questions to the Generator tab!`;
-                        topicInput.value = '';
-                    } else {
-                        statusMsg.classList.replace('text-primary', 'text-yellow-400');
-                        statusMsg.innerText = `Generated ${data.added} questions! (Manual copy required)`;
-                        document.getElementById('results-container').classList.remove('hidden');
-                        
-                        const list = document.getElementById('cards-list');
-                        list.innerHTML = data.cards.map((c, i) => `
-                            <div class="bg-black/30 p-4 rounded-xl border border-white/10 text-sm flex flex-col gap-2">
-                                <p class="font-bold text-white">${i+1}. ${c.question}</p>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-300 mt-2">
-                                    <div class="${c.correct === 'A' ? 'text-green-400 font-bold' : ''}">A: ${c.optA}</div>
-                                    <div class="${c.correct === 'B' ? 'text-green-400 font-bold' : ''}">B: ${c.optB}</div>
-                                    <div class="${c.correct === 'C' ? 'text-green-400 font-bold' : ''}">C: ${c.optC}</div>
-                                    <div class="${c.correct === 'D' ? 'text-green-400 font-bold' : ''}">D: ${c.optD}</div>
-                                </div>
-                                <p class="text-blue-300 italic text-xs mt-2 border-t border-white/5 pt-2">Ref: ${c.reference}</p>
+                    statusMsg.classList.remove('hidden', 'text-error');
+                    statusMsg.classList.add('text-secondary');
+                    statusMsg.innerText = `Generated ${data.added} questions!`;
+                    
+                    document.getElementById('results-container').classList.remove('hidden');
+                    
+                    const list = document.getElementById('cards-list');
+                    list.innerHTML = data.cards.map((c, i) => `
+                        <div class="glass-card rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-secondary-container"></div>
+                            <p class="font-title-md text-text-primary text-sm">${i+1}. ${c.question}</p>
+                            <div class="grid grid-cols-1 gap-2 font-body-md text-sm text-text-muted mt-2">
+                                <div class="p-2 rounded ${c.correct === 'A' ? 'bg-secondary-container/20 text-secondary font-bold border border-secondary/30' : 'bg-surface-container-low'}">A. ${c.optA}</div>
+                                <div class="p-2 rounded ${c.correct === 'B' ? 'bg-secondary-container/20 text-secondary font-bold border border-secondary/30' : 'bg-surface-container-low'}">B. ${c.optB}</div>
+                                <div class="p-2 rounded ${c.correct === 'C' ? 'bg-secondary-container/20 text-secondary font-bold border border-secondary/30' : 'bg-surface-container-low'}">C. ${c.optC}</div>
+                                <div class="p-2 rounded ${c.correct === 'D' ? 'bg-secondary-container/20 text-secondary font-bold border border-secondary/30' : 'bg-surface-container-low'}">D. ${c.optD}</div>
                             </div>
-                        `).join('');
-                    }
+                            <p class="text-xs text-primary/60 italic mt-2">Ref: ${c.reference}</p>
+                        </div>
+                    `).join('');
                 } else {
                     throw new Error(data.error || "Failed to generate");
                 }
             } catch (err) {
-                console.error(err);
-                statusMsg.classList.replace('text-primary', 'text-red-400');
-                statusMsg.innerText = "Error: " + err.message;
+                statusMsg.classList.remove('hidden', 'text-secondary');
+                statusMsg.classList.add('text-error');
+                statusMsg.innerText = err.message;
             } finally {
                 btn.disabled = false;
-                btn.classList.remove('opacity-70', 'cursor-not-allowed');
-                btnText.innerText = "Generate & Save to Sheets";
-                btnIcon.innerText = "magic_button";
-                btnIcon.classList.remove('animate-spin');
+                btn.innerHTML = `<span class="material-symbols-outlined" data-icon="magic_button">magic_button</span> Generate`;
             }
         });
-    </script>
-</body>
-</html>
+
+        // Tabs Logic
+        const tabGen = document.getElementById('tab-gen');
+        const tabChat = document.getElementById('tab-chat');
+        const viewGen = document.getElementById('view-gen');
+        const viewChat = document.getElementById('view-chat');
+
+        tabGen.addEventListener('click', () => {
+            tabGen.className = "flex-1 py-3 font-title-md text-sm font-bold text-primary border-b-2 border-primary transition-colors";
+            tabChat.className = "flex-1 py-3 font-title-md text-sm font-bold text-text-muted border-b-2 border-transparent hover:text-primary transition-colors";
+            viewGen.classList.remove('hidden');
+            viewChat.classList.add('hidden');
+            viewChat.classList.remove('flex');
+        });
+
+        tabChat.addEventListener('click', () => {
+            tabChat.className = "flex-1 py-3 font-title-md text-sm font-bold text-primary border-b-2 border-primary transition-colors";
+            tabGen.className = "flex-1 py-3 font-title-md text-sm font-bold text-text-muted border-b-2 border-transparent hover:text-primary transition-colors";
+            viewChat.classList.remove('hidden');
+            viewChat.classList.add('flex');
+            viewGen.classList.add('hidden');
+        });
+
+        // Chat with PDF Logic
+        const pdfChatInput = document.getElementById('pdf-chat-input');
+        const pdfChatSend = document.getElementById('pdf-chat-send');
+        const pdfChatHistory = document.getElementById('pdf-chat-history');
+
+        async function sendPdfChat() {
+            const message = pdfChatInput.value.trim();
+            if(!message) return;
+
+            const selectedPdf = pdfSelector.value.split('/').pop(); // Get filename only
+            
+            pdfChatInput.value = '';
+            pdfChatInput.disabled = true;
+            pdfChatSend.disabled = true;
+
+            pdfChatHistory.innerHTML += `
+                <div class="flex gap-2 items-start justify-end">
+                    <p class="text-sm bg-surface-container p-3 rounded-lg border border-outline-variant text-text-primary ml-10">${message}</p>
+                    <span class="material-symbols-outlined text-text-muted text-sm mt-1">person</span>
+                </div>`;
+            pdfChatHistory.scrollTop = pdfChatHistory.scrollHeight;
+
+            try {
+                const res = await fetch('/api/chat-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, pdfName: selectedPdf })
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error);
+
+                pdfChatHistory.innerHTML += `
+                    <div class="flex gap-2 items-start">
+                        <span class="material-symbols-outlined text-tertiary text-sm mt-1">auto_awesome</span>
+                        <p class="text-sm bg-surface-container-low p-3 rounded-lg border border-primary/10 text-text-primary mr-10">${data.reply}</p>
+                    </div>`;
+            } catch (err) {
+                pdfChatHistory.innerHTML += `<p class="text-xs text-error text-center mt-2">${err.message}</p>`;
+            }
+            
+            pdfChatHistory.scrollTop = pdfChatHistory.scrollHeight;
+            pdfChatInput.disabled = false;
+            pdfChatSend.disabled = false;
+            pdfChatInput.focus();
+        }
+
+        pdfChatSend.addEventListener('click', sendPdfChat);
+        pdfChatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendPdfChat(); });
+    });
+</script>
+</body></html>

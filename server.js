@@ -99,6 +99,20 @@ app.post('/api/generate-cards', async (req, res) => {
     }
 });
 
+// Endpoint for Chat with PDF
+app.post('/api/chat-pdf', async (req, res) => {
+    const { message, pdfName } = req.body;
+    if (!message || !pdfName) return res.status(400).json({ error: "Missing message or pdfName" });
+    
+    try {
+        // MOCK RESPONSE for now until Gemini File API is initialized on Render
+        res.json({ reply: `I've analyzed your question about "${pdfName}". The backend RAG system is ready to be initialized upon deployment to Render!` });
+    } catch (error) {
+        console.error("PDF Chat Error:", error);
+        res.status(500).json({ error: "Failed to process PDF chat" });
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
