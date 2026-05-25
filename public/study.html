@@ -194,7 +194,8 @@
             loadQuestion();
             
         } catch (error) {
-            document.getElementById('loading-spinner').innerHTML = `<span class="text-error">Error loading module</span>`;
+            document.getElementById('loading-spinner').innerHTML = `<span class="text-error">Error: \${error.message}</span>`;
+            console.error(error);
         }
 
         document.getElementById('next-btn').addEventListener('click', () => {
