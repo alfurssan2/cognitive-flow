@@ -337,16 +337,37 @@
                 <div class="w-6 h-6 shrink-0 rounded-full border border-primary/30 flex items-center justify-center text-xs text-text-muted group-hover:border-secondary group-hover:text-secondary">${opt.id}</div>
                 <span class="font-body-md text-text-primary">${opt.text}</span>
             `;
-            btn.onclick = () => handleAnswer(opt.id, opt.text, q);
+            btn.onclick = (e) => handleAnswer(opt.id, opt.text, q, e.currentTarget);
             optionsContainer.appendChild(btn);
         });
     }
 
-    async function handleAnswer(selectedId, selectedText, currentQuestion) {
+    async function handleAnswer(selectedId, selectedText, currentQuestion, clickedBtn) {
         const isCorrect = selectedId === currentQuestion.correctAnswerLabel;
         const container = document.getElementById('flashcard-inner');
         
         if (isCorrect) score++;
+        
+        // Update live stats immediately
+        document.getElementById('live-questions').innerText = `\${currentQuestionIndex + 1}`;
+        document.getElementById('live-accuracy').innerText = `\${Math.round((score / (currentQuestionIndex + 1)) * 100)}%`;
+
+        const isMarathon = new URLSearchParams(window.location.search).get('mode') === 'marathon';
+        if (isMarathon) {
+            if (clickedBtn) {
+                clickedBtn.classList.add(isCorrect ? 'bg-green-500/20' : 'bg-error/20');
+                clickedBtn.classList.add(isCorrect ? 'border-green-500' : 'border-error');
+            }
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    loadQuestion();
+                } else {
+                    showCompletion();
+                }
+            }, 300);
+            return;
+        }
         
         const correctAnswerText = currentQuestion.correctAnswerText;
         
@@ -389,8 +410,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     question: currentQuestion.question,
-                    correct: `${currentQuestion.correctAnswerLabel}: ${correctAnswerText}`,
-                    selected: `${selectedId}: ${selectedText}`
+                    correctAnswer: `${currentQuestion.correctAnswerLabel}: ${correctAnswerText}`,
+                    incorrectAnswer: `${selectedId}: ${selectedText}`
                 })
             });
             const data = await res.json();
@@ -407,7 +428,7 @@
                     `I correctly answered "${selectedText}" to the question "${currentQuestion.question}". I might have a follow up question.` : 
                     `I incorrectly answered "${selectedText}" to the question "${currentQuestion.question}". The correct answer is "${correctAnswerText}".` }] 
             });
-            chatHistoryArray.push({ role: 'model', parts: [{ text: data.hint }] });
+            chatHistoryArray.push({ role: 'model', parts: [{ text: data.conceptual_hint || data.error || "Explanation loaded." }] });
 
         } catch (e) {
             document.getElementById('ai-hint').innerText = "Failed to load explanation.";
