@@ -130,7 +130,7 @@
 </head>
 <body class="bg-surface-deep text-on-surface">
 <!-- Sidebar Navigation -->
-<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col bg-surface-container dark:bg-surface-container border-r border-primary/10 shadow-xl shadow-secondary-container/5 z-50">
+<aside id="sidebar" class="h-screen w-64 fixed left-0 top-0 flex flex-col bg-surface-container dark:bg-surface-container border-r border-primary/10 shadow-xl shadow-secondary-container/5 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
 <div class="flex flex-col h-full py-8 space-y-2">
 <div class="px-6 mb-8">
 <h1 class="font-headline-lg text-headline-lg font-bold text-primary tracking-tight">CogniStudy</h1>
@@ -162,8 +162,11 @@
 </div>
 </aside>
 <!-- Top App Bar -->
-<header class="docked full-width top-0 sticky z-40 bg-surface-container/80 backdrop-blur-md shadow-sm border-b border-primary/10 flex justify-between items-center h-20 px-gutter w-full ml-64 max-w-[calc(100%-16rem)]">
-<div class="flex items-center gap-8 flex-1">
+<header class="docked full-width top-0 sticky z-40 bg-surface-container/80 backdrop-blur-md shadow-sm border-b border-primary/10 flex justify-between items-center h-20 px-4 lg:px-gutter w-full lg:ml-64 lg:max-w-[calc(100%-16rem)] transition-all">
+<div class="flex items-center gap-4 flex-1">
+    <button id="mobile-menu-btn" class="lg:hidden p-2 text-text-muted hover:text-primary rounded-full transition-all">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
     <h2 class="font-title-md text-title-md text-text-primary">Performance Overview</h2>
 </div>
 <div class="flex items-center gap-4">
@@ -179,7 +182,7 @@
 </div>
 </header>
 <!-- Main Content Canvas -->
-<main class="ml-64 p-gutter max-w-[calc(100%-16rem)]">
+<main class="lg:ml-64 p-4 lg:p-gutter w-full lg:max-w-[calc(100%-16rem)] transition-all">
 <div class="grid grid-cols-12 gap-gutter">
 <!-- Column 1: Overall Mastery (3/12) -->
 <div class="col-span-12 lg:col-span-3 space-y-gutter">
@@ -384,6 +387,14 @@
         }
         
         renderStats(JSON.parse(localStorage.getItem('exam_stats')) || {});
+
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        if (mobileMenuBtn && sidebar) {
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+        }
     });
 </script>
 </body></html>

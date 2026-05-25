@@ -28,7 +28,7 @@
 </head>
 <body class="bg-surface-deep text-on-surface h-screen overflow-hidden flex">
 <!-- Sidebar Navigation -->
-<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col bg-surface-container border-r border-primary/10 shadow-xl z-50">
+<aside id="sidebar" class="h-screen w-64 fixed left-0 top-0 flex flex-col bg-surface-container border-r border-primary/10 shadow-xl z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
 <div class="flex flex-col h-full py-8 space-y-2">
 <div class="px-6 mb-8">
 <h1 class="font-headline-lg text-headline-lg font-bold text-primary tracking-tight">CogniStudy</h1>
@@ -53,11 +53,14 @@
 </div>
 </aside>
 
-<main class="ml-64 flex-1 flex flex-col h-screen overflow-y-auto">
+<main class="lg:ml-64 w-full flex-1 flex flex-col h-screen overflow-y-auto transition-all">
     <!-- Top App Bar -->
-    <header class="sticky top-0 z-40 bg-surface-container/80 backdrop-blur-md shadow-sm border-b border-primary/10 flex justify-between items-center h-20 px-gutter w-full">
+    <header class="sticky top-0 z-40 bg-surface-container/80 backdrop-blur-md shadow-sm border-b border-primary/10 flex justify-between items-center h-20 px-4 lg:px-gutter w-full">
         <div class="flex items-center gap-4">
-            <span class="material-symbols-outlined text-primary" data-icon="timer">timer</span>
+            <button id="mobile-menu-btn" class="lg:hidden p-2 text-text-muted hover:text-primary rounded-full transition-all">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <span class="material-symbols-outlined text-primary hidden sm:block" data-icon="timer">timer</span>
             <div class="flex flex-col">
                 <span id="session-pillar" class="font-title-md text-title-md text-primary font-bold tracking-widest">Active Session</span>
                 <span class="font-label-sm text-[10px] text-text-muted uppercase">Adaptive Exam</span>
@@ -255,6 +258,14 @@
 
         chatSendBtn.addEventListener('click', sendChatMessage);
         chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
+
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        if (mobileMenuBtn && sidebar) {
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+        }
     });
 
     function loadQuestion() {
