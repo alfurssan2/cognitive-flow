@@ -4,7 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const { google } = require('googleapis');
 const { fetchSessionData, shuffleAndFormatQuestions, appendGeneratedCards } = require('./src/sheets');
-const { getCognitiveHint, chatWithTutor, generateCards } = require('./src/gemini');
+const { getCognitiveHint, chatWithTutor, generateCards, chatWithPDF } = require('./src/gemini');
 
 const app = express();
 app.use(cors());
@@ -105,11 +105,11 @@ app.post('/api/chat-pdf', async (req, res) => {
     if (!message || !pdfName) return res.status(400).json({ error: "Missing message or pdfName" });
     
     try {
-        // MOCK RESPONSE for now until Gemini File API is initialized on Render
-        res.json({ reply: `I've analyzed your question about "${pdfName}". The backend RAG system is ready to be initialized upon deployment to Render!` });
+        const reply = await chatWithPDF(pdfName, message);
+        res.json({ reply });
     } catch (error) {
         console.error("PDF Chat Error:", error);
-        res.status(500).json({ error: "Failed to process PDF chat" });
+        res.status(500).json({ error: error.message || "Failed to process PDF chat" });
     }
 });
 
