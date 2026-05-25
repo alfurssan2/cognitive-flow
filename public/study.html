@@ -278,17 +278,15 @@
         const optionsContainer = document.getElementById('options-container');
         optionsContainer.innerHTML = '';
         
-        const options = [
-            { id: 'A', text: q.optA },
-            { id: 'B', text: q.optB },
-            { id: 'C', text: q.optC },
-            { id: 'D', text: q.optD }
-        ];
+        const options = q.options.map(o => ({
+            id: o.originalKey,
+            text: o.text
+        }));
 
         options.forEach(opt => {
             if (!opt.text) return;
             const btn = document.createElement('button');
-            btn.className = "text-left p-5 rounded-lg border border-primary/10 hover:border-secondary bg-surface-container-low hover:bg-surface-container transition-all flex gap-4 items-start group";
+            btn.className = "text-left p-5 rounded-lg border border-primary/10 hover:border-secondary bg-surface-container-low hover:bg-surface-container transition-all flex gap-4 items-start group w-full";
             btn.innerHTML = `
                 <div class="w-6 h-6 shrink-0 rounded-full border border-primary/30 flex items-center justify-center text-xs text-text-muted group-hover:border-secondary group-hover:text-secondary">${opt.id}</div>
                 <span class="font-body-md text-text-primary">${opt.text}</span>
@@ -302,8 +300,10 @@
         const isCorrect = selectedId === currentQuestion.correct;
         const container = document.getElementById('flashcard-inner');
         
+        const correctAnswerText = currentQuestion.options.find(o => o.originalKey === currentQuestion.correct)?.text || '';
+        
         document.getElementById('correct-answer-text').innerText = 
-            `${currentQuestion.correct}: ${currentQuestion['opt'+currentQuestion.correct]}`;
+            `${currentQuestion.correct}: ${correctAnswerText}`;
         document.getElementById('back-reference').innerText = currentQuestion.reference;
         
         const header = document.getElementById('back-header');
@@ -342,18 +342,18 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     question: currentQuestion.question,
-                    correct: `${currentQuestion.correct}: ${currentQuestion['opt'+currentQuestion.correct]}`,
+                    correct: `${currentQuestion.correct}: ${correctAnswerText}`,
                     selected: `${selectedId}: ${selectedText}`
                 })
             });
             const data = await res.json();
-            document.getElementById('ai-hint').innerHTML = `<p>${data.hint}</p>`;
+            document.getElementById('ai-hint').innerHTML = `<p>${data.hint || data.conceptual_hint || 'Explanation loaded.'}</p>`;
             
             chatHistoryArray.push({ 
                 role: 'user', 
                 parts: [{ text: isCorrect ? 
                     `I correctly answered "${selectedText}" to the question "${currentQuestion.question}". I might have a follow up question.` : 
-                    `I incorrectly answered "${selectedText}" to the question "${currentQuestion.question}". The correct answer is "${currentQuestion['opt'+currentQuestion.correct]}".` }] 
+                    `I incorrectly answered "${selectedText}" to the question "${currentQuestion.question}". The correct answer is "${correctAnswerText}".` }] 
             });
             chatHistoryArray.push({ role: 'model', parts: [{ text: data.hint }] });
 
