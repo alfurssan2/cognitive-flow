@@ -173,14 +173,13 @@
         }
 
         try {
-            const res = await fetch('/api/questions');
+            const url = specificPillar ? \`/api/session?pillar=\${encodeURIComponent(specificPillar)}\` : '/api/session';
+            const res = await fetch(url);
             const data = await res.json();
             
-            if (specificPillar) {
-                questions = data.filter(q => q.pillar === specificPillar);
-            } else {
-                questions = data;
-            }
+            if (!res.ok) throw new Error(data.error || "Failed to fetch session");
+            
+            questions = data.session || [];
             
             // Randomize and limit to 10
             questions = questions.sort(() => 0.5 - Math.random()).slice(0, 10);
