@@ -132,8 +132,88 @@ async function appendGeneratedCards(sheetsAPI, spreadsheetId, newCards) {
     });
 }
 
+/**
+ * Reads and formats data from 'Bridge' and 'Reverse Recognition' sheets,
+ * automatically joining them to attach the correct bridge hooks and pillars.
+ */
+async function fetchBridgeStudyData(sheetsAPI, spreadsheetId) {
+    // 1. Fetch 'Bridge' tab values
+    const bridgeResponse = await sheetsAPI.spreadsheets.values.get({
+        spreadsheetId,
+        range: "'Bridge'!A:E",
+    });
+    const bridgeRows = bridgeResponse.data.values;
+    if (!bridgeRows || bridgeRows.length <= 1) {
+        throw new Error("No data found in Bridge tab.");
+    }
+    const bridgeData = bridgeRows.slice(1).map(row => ({
+        question: row[0] || "",
+        bridge: row[1] || "",
+        answer: row[2] || "",
+        lesson: row[3] || "",
+        pillar: row[4] || ""
+    }));
+
+    // 2. Fetch 'Reverse Recognition' tab values
+    const rrResponse = await sheetsAPI.spreadsheets.values.get({
+        spreadsheetId,
+        range: "'Reverse Recognition'!A:G",
+    });
+    const rrRows = rrResponse.data.values;
+    if (!rrRows || rrRows.length <= 1) {
+        throw new Error("No data found in Reverse Recognition tab.");
+    }
+    const quizData = rrRows.slice(1).map(row => {
+        const stem = row[0] || "";
+        const optA = row[1] || "";
+        const optB = row[2] || "";
+        const optC = row[3] || "";
+        const optD = row[4] || "";
+        const correct = row[5] || ""; // 'A', 'B', 'C', or 'D'
+        const reference = row[6] || "";
+
+        // Find the correct question text
+        let correctQuestionText = "";
+        if (correct === 'A') correctQuestionText = optA;
+        else if (correct === 'B') correctQuestionText = optB;
+        else if (correct === 'C') correctQuestionText = optC;
+        else if (correct === 'D') correctQuestionText = optD;
+
+        // Try to match with Bridge sheet to find the bridge hook and the pillar
+        let bridgeHook = "";
+        let pillar = "General";
+        let lesson = reference;
+
+        const match = bridgeData.find(b => b.question.trim().toLowerCase() === correctQuestionText.trim().toLowerCase());
+        if (match) {
+            bridgeHook = match.bridge;
+            pillar = match.pillar;
+            lesson = match.lesson;
+        }
+
+        return {
+            stem,
+            optA,
+            optB,
+            optC,
+            optD,
+            correct,
+            reference,
+            bridge: bridgeHook,
+            pillar,
+            lesson
+        };
+    });
+
+    return {
+        bridgeData,
+        quizData
+    };
+}
+
 module.exports = {
     fetchSessionData,
     shuffleAndFormatQuestions,
-    appendGeneratedCards
+    appendGeneratedCards,
+    fetchBridgeStudyData
 };

@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { google } = require('googleapis');
-const { fetchSessionData, shuffleAndFormatQuestions, appendGeneratedCards } = require('./src/sheets');
+const { fetchSessionData, shuffleAndFormatQuestions, appendGeneratedCards, fetchBridgeStudyData } = require('./src/sheets');
 const { getCognitiveHint, chatWithTutor, generateCards, chatWithPDF } = require('./src/gemini');
 
 const app = express();
@@ -153,6 +153,21 @@ app.post('/api/generate-cards', async (req, res) => {
     } catch (error) {
         console.error("Generate Error:", error);
         res.status(500).json({ error: error.message || "Failed to generate cards" });
+    }
+});
+
+// Endpoint to fetch joined Bridge and Quiz data
+app.get('/api/bridge-study', async (req, res) => {
+    try {
+        const spreadsheetId = process.env.SPREADSHEET_ID;
+        if (!spreadsheetId) throw new Error("SPREADSHEET_ID not configured in .env");
+        if (!process.env.GOOGLE_API_KEY) throw new Error("GOOGLE_API_KEY not configured in .env");
+
+        const data = await fetchBridgeStudyData(sheetsAPI, spreadsheetId);
+        res.json(data);
+    } catch (error) {
+        console.error("Bridge Study API Error:", error);
+        res.status(500).json({ error: error.message });
     }
 });
 
